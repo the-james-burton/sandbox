@@ -15,6 +15,7 @@
   </parent>
 
   <properties>
+    <logback.version>1.1.5</logback.version>
     <javaslang.version>2.0.2</javaslang.version>
     <cyclops-react.version>1.0.0-RC3</cyclops-react.version>
     <cyclops-javaslang.version>8.0.0</cyclops-javaslang.version>
@@ -24,6 +25,14 @@
   </properties>
 
   <dependencies>
+  
+  
+  <dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>${logback.version}</version>
+  </dependency>
+  
     <dependency>
       <groupId>io.javaslang</groupId>
       <artifactId>javaslang</artifactId>
@@ -53,27 +62,29 @@
       <artifactId>cyclops-javaslang</artifactId>
       <version>${cyclops-javaslang.version}</version>
     </dependency>
-    
+
+
     <!-- ======================================================= -->
     <!-- TEST -->
     <dependency>
-  <groupId>junit</groupId>
-  <artifactId>junit</artifactId>
-  <version>${junit.version}</version>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
     </dependency>
-    
+
     <dependency>
-  <groupId>org.mockito</groupId>
-  <artifactId>mockito-core</artifactId>
-  <version>${mockito.version}</version>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>io.javaslang</groupId>
       <artifactId>javaslang-test</artifactId>
       <scope>test</scope>
       <version>${javaslang.version}</version>
     </dependency>
+    
   </dependencies>
 
 </project>
