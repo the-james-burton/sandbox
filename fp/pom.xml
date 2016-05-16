@@ -16,6 +16,7 @@
 
   <properties>
     <logback.version>1.1.5</logback.version>
+    <immutables.version>2.1.19</immutables.version>
     <javaslang.version>2.0.2</javaslang.version>
     <cyclops-react.version>1.0.0-RC3</cyclops-react.version>
     <cyclops-javaslang.version>8.0.0</cyclops-javaslang.version>
@@ -24,15 +25,38 @@
     <mockito.version>1.10.19</mockito.version>
   </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.3</version>
+        <configuration>
+          <compilerVersion>1.8</compilerVersion>
+          <source>1.8</source>
+          <target>1.8</target>
+          <!-- Prevents an endPosTable exception during compilation -->
+          <useIncrementalCompilation>false</useIncrementalCompilation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
-  
-  
-  <dependency>
-    <groupId>ch.qos.logback</groupId>
-    <artifactId>logback-classic</artifactId>
-    <version>${logback.version}</version>
-  </dependency>
-  
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.immutables</groupId>
+      <artifactId>value</artifactId>
+      <version>${immutables.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
     <dependency>
       <groupId>io.javaslang</groupId>
       <artifactId>javaslang</artifactId>
@@ -84,7 +108,7 @@
       <scope>test</scope>
       <version>${javaslang.version}</version>
     </dependency>
-    
+
   </dependencies>
 
 </project>
