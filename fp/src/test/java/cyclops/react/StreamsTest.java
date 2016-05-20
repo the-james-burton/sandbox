@@ -15,8 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aol.cyclops.control.ReactiveSeq;
+import com.aol.cyclops.types.stream.reactive.SeqSubscriber;
 import com.aol.cyclops.util.stream.StreamUtils;
 import com.aol.cyclops.util.stream.Streamable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
 
 /**
  * My own learning from...
@@ -36,6 +39,8 @@ public class StreamsTest {
    */
   @Test
   public void testStreamUtils() {
+    logger.info(TestUtils.getMethodName());
+
     List<String> result = StreamUtils
         .deleteBetween(Stream.of(1, 2, 3, 4, 5, 6), 2, 4)
         .map(it -> it + "!!")
@@ -48,6 +53,8 @@ public class StreamsTest {
    */
   @Test
   public void testStreamable() {
+    logger.info(TestUtils.getMethodName());
+
     Optional<Integer> result = Streamable
         .of(1, 2, 3)
         .map(i -> i + 1)
@@ -62,6 +69,7 @@ public class StreamsTest {
    */
   @Test
   public void testHotStreams() {
+    logger.info(TestUtils.getMethodName());
 
     Executor exec = Executors.newFixedThreadPool(1);
     ReactiveSeq.range(0, Integer.MAX_VALUE)
@@ -77,6 +85,7 @@ public class StreamsTest {
    */
   @Test
   public void testHotStreamsConnect() {
+    logger.info(TestUtils.getMethodName());
 
     Executor exec = Executors.newFixedThreadPool(1);
 
@@ -96,22 +105,65 @@ public class StreamsTest {
    * We connect and use a BlockingStream as a transfer queue, the producing
    * Stream will ultimately be slowed to the same rate as the consuming Stream.
    * 
-   * TODO - I don't think this works, raise issue with cyclops-react
+   * TODO - https://github.com/aol/cyclops/issues/198
    */
   @Test
   public void testHotStreamsBackPressure() {
+    logger.info(TestUtils.getMethodName());
 
     Executor exec = Executors.newFixedThreadPool(1);
-    ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<String>(3);
+    ArrayBlockingQueue<String> blockingQueue = Queues.newArrayBlockingQueue(3);
 
     ReactiveSeq.range(0, Integer.MAX_VALUE)
-        .limit(500)
+        .limit(5)
         .map(i -> i.toString())
         .peek(logger::info)
         .hotStream(exec)
         .connect(blockingQueue)
         .onePer(1, TimeUnit.SECONDS)
         .forEach(next -> logger.info(next));
+  }
+
+  /**
+   * ReactiveSeq has a static subscriber method that returns a cyclops-react
+   * reactive-streams Subscriber. That is a class that can subscribe to any
+   * reactive-streams publisher (e.g. an RxJava Observable, Pivotal REACTOR Stream,
+   * akka-stream etc).
+   * 
+   * ReactiveSeq extenads java.util.stream.Stream - so this also a standard, sequential Java 8 Stream.
+   * 
+   * TODO - I think the user guide is a little off here... maybe do a PR.
+   */
+  @Test
+  public void testPublishSubscribe() {
+    logger.info(TestUtils.getMethodName());
+
+    SeqSubscriber<Integer> subscriber = ReactiveSeq.subscriber();
+    ReactiveSeq<Integer> queue = ReactiveSeq.of(1, 2, 3, 4);
+    queue.subscribe(subscriber);
+    // note that this stream is a cyclops 'reactiveSeq'...
+    Optional<Integer> result = subscriber.stream()
+        .map(i -> i + 1)
+        .reduce((a, b) -> a + b);
+    logger.info("result : {}", result.orElse(-1));
+  }
+
+  @Test
+  public void testForEachWithError() {
+    final List<String> result = Lists.newArrayList();
+    final List<Throwable> errors = Lists.newArrayList();
+    ReactiveSeq.of(1, 2, 3, 4)
+        .map(this::toStringMayThrowError)
+        .forEachWithError(i -> result.add(i), e -> errors.add(e));
+    logger.info("result : {}", result);
+    logger.info("errors : {}", errors);
+  }
+
+  public String toStringMayThrowError(Integer i) {
+    if (i == 2) {
+      throw new RuntimeException("I hate you");
+    }
+    return i.toString();
   }
 
 }
