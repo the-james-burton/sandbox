@@ -1,5 +1,7 @@
 package cyclops.react;
 
+import java.io.Closeable;
+import java.io.File;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
@@ -18,11 +20,13 @@ import com.aol.cyclops.control.ReactiveSeq;
 import com.aol.cyclops.types.stream.reactive.SeqSubscriber;
 import com.aol.cyclops.util.stream.StreamUtils;
 import com.aol.cyclops.util.stream.Streamable;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
+import com.google.common.io.Files;
 
 /**
- * My own learning from...
+ * Working demonstrations of cyclops-react streams as JUnit tests...
  * file:///home/jimsey/Development/projects/cyclops-react/user-guide/streams.adoc
  *
  * @author the-james-burton
@@ -71,7 +75,7 @@ public class StreamsTest {
   public void testHotStreams() {
     logger.info(TestUtils.getMethodName());
 
-    Executor exec = Executors.newFixedThreadPool(1);
+    final Executor exec = Executors.newFixedThreadPool(1);
     ReactiveSeq.range(0, Integer.MAX_VALUE)
         .limit(5)
         .map(i -> i.toString())
@@ -87,7 +91,7 @@ public class StreamsTest {
   public void testHotStreamsConnect() {
     logger.info(TestUtils.getMethodName());
 
-    Executor exec = Executors.newFixedThreadPool(1);
+    final Executor exec = Executors.newFixedThreadPool(1);
 
     ReactiveSeq.range(0, Integer.MAX_VALUE)
         .limit(5)
@@ -111,8 +115,8 @@ public class StreamsTest {
   public void testHotStreamsBackPressure() {
     logger.info(TestUtils.getMethodName());
 
-    Executor exec = Executors.newFixedThreadPool(1);
-    ArrayBlockingQueue<String> blockingQueue = Queues.newArrayBlockingQueue(3);
+    final Executor exec = Executors.newFixedThreadPool(1);
+    final ArrayBlockingQueue<String> blockingQueue = Queues.newArrayBlockingQueue(3);
 
     ReactiveSeq.range(0, Integer.MAX_VALUE)
         .limit(5)
@@ -138,8 +142,9 @@ public class StreamsTest {
   public void testPublishSubscribe() {
     logger.info(TestUtils.getMethodName());
 
-    SeqSubscriber<Integer> subscriber = ReactiveSeq.subscriber();
-    ReactiveSeq<Integer> queue = ReactiveSeq.of(1, 2, 3, 4);
+    final SeqSubscriber<Integer> subscriber = ReactiveSeq.subscriber();
+    final ReactiveSeq<Integer> queue = ReactiveSeq.of(1, 2, 3, 4);
+
     queue.subscribe(subscriber);
     // note that this stream is a cyclops 'reactiveSeq'...
     Optional<Integer> result = subscriber.stream()
@@ -148,22 +153,53 @@ public class StreamsTest {
     logger.info("result : {}", result.orElse(-1));
   }
 
+  /**
+   * The forEachWithErrors operator allows users to iterate over a Stream providing
+   * a consumer for the elements for the Stream a lá Stream.forEach, and a consumer
+   * for the errors produced while processing the Stream.
+   */
   @Test
   public void testForEachWithError() {
+    logger.info(TestUtils.getMethodName());
+
     final List<String> result = Lists.newArrayList();
     final List<Throwable> errors = Lists.newArrayList();
     ReactiveSeq.of(1, 2, 3, 4)
-        .map(this::toStringMayThrowError)
-        .forEachWithError(i -> result.add(i), e -> errors.add(e));
+        .map(i -> TestUtils.toStringMayThrowError(i))
+        .forEachWithError(
+            // TODO - possible/sensible to use PCollections here..?
+            i -> result.add(i),
+            e -> errors.add(e));
     logger.info("result : {}", result);
     logger.info("errors : {}", errors);
   }
 
-  public String toStringMayThrowError(Integer i) {
-    if (i == 2) {
-      throw new RuntimeException("I hate you");
-    }
-    return i.toString();
+  /**
+   * The forEachEvent operator is similar to forEachWithErrors but also accepts
+   * a Runnable that is run when the Stream has been completely consumed.
+   */
+  @Test
+  public void testForEachEvent() throws Exception {
+    logger.info(TestUtils.getMethodName());
+
+    final File file = File.createTempFile("test", "txt");
+    final Closeable resource = Files.newWriter(file, Charsets.UTF_8);
+    final List<String> result = Lists.newArrayList();
+    final List<Throwable> errors = Lists.newArrayList();
+
+    ReactiveSeq.of(1, 2, 3, 4)
+        .map(i -> TestUtils.toStringMayThrowError(i))
+        .forEachEvent(
+            i -> result.add(i),
+            e -> errors.add(e),
+            // TODO can't seem to do this with Try..?
+            // Try.run(() -> resource.close()));
+            () -> TestUtils.safeClose(resource));
+    logger.info("result : {}", result);
+    logger.info("errors : {}", errors);
+
   }
+
+  // -------------------------------------------------
 
 }
