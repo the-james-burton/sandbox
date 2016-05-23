@@ -34,4 +34,23 @@ public class TestUtils {
     }
   }
 
+  /**
+   * Given an integer will return the same integer, but possibly with a delay,
+   * to simulate a longer running process
+   * @param n
+   * @return n
+   * @throws InterruptedException
+   */
+  public static Integer mayBeSlow(Integer n) {
+    if (n == 6) {
+      try {
+        Thread.sleep(1);
+      } catch (InterruptedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+    return n;
+  }
+
 }

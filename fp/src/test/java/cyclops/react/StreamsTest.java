@@ -6,6 +6,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aol.cyclops.control.ReactiveSeq;
+import com.aol.cyclops.data.collections.extensions.standard.ListX;
+import com.aol.cyclops.types.stream.future.FutureOperations;
+import com.aol.cyclops.types.stream.reactive.ReactiveTask;
 import com.aol.cyclops.types.stream.reactive.SeqSubscriber;
 import com.aol.cyclops.util.stream.StreamUtils;
 import com.aol.cyclops.util.stream.Streamable;
@@ -27,7 +31,7 @@ import com.google.common.io.Files;
 
 /**
  * Working demonstrations of cyclops-react streams as JUnit tests...
- * file:///home/jimsey/Development/projects/cyclops-react/user-guide/streams.adoc
+ * https://github.com/aol/cyclops-react/blob/master/user-guide/streams.adoc
  *
  * @author the-james-burton
  */
@@ -200,6 +204,121 @@ public class StreamsTest {
 
   }
 
-  // -------------------------------------------------
+  /**
+   * The reactive-streams based terminal operations can also be launched asynchronously,
+   * first by using the futureOperations operator to provide an Executor that will
+   * process the Stream. The futureOperations operator opens up a world of
+   * asynchronously executed terminal operations. A large range of terminal operations
+   * are provided and for each one a CompletbableFuture is returned.
+   */
+  @Test
+  public void testFutureOperations() {
+    logger.info(TestUtils.getMethodName());
 
+    Executor exec = Executors.newFixedThreadPool(1);
+    FutureOperations<Integer> terminalOps = StreamUtils.futureOperations(Stream.of(1, 2, 3), exec);
+
+    // execute the collection & Stream evaluation on the provided executor
+    CompletableFuture<List<Integer>> list = terminalOps.collect(Collectors.toList());
+
+    List<Integer> result = list.join();
+
+    logger.info("result : {}", result);
+
+  }
+
+  /**
+   * Each of the async Future Operations for reactive-streams (forEachX,
+   * forEachEvent etc), return a ReactiveTask object. This allows users
+   * to check the status of Stream processing, to cancel it, to request
+   * more elements to be processed from the Stream either synchronously
+   * or asynchronously.
+   */
+  @Test
+  public void testReactiveTask() {
+    logger.info(TestUtils.getMethodName());
+
+    Executor exec = Executors.newFixedThreadPool(1);
+    List<Integer> result = Lists.newArrayList();
+    ReactiveTask s = ReactiveSeq.of(1, 2, 3, 4)
+        .futureOperations(exec)
+        .forEachX(2, i -> {
+          logger.info("computing {}", i);
+          result.add(i);
+        });
+
+    logger.info("result : {}", result); // []
+    s.block(); // wait until first 2 elements are processed
+    logger.info("result : {}", result); // [1, 2]
+    s.requestAll(); // trigger the remainder of the Stream processing asynchronously
+    logger.info("result : {}", result); // [1, 2, 3, 4]
+
+  }
+
+  @Test
+  public void testBatchingSlidingWindowing() {
+    logger.info(TestUtils.getMethodName());
+
+    List<ListX<Integer>> sliding = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
+        .sliding(2)
+        .toList();
+
+    logger.info("sliding : {}", sliding); // [[1,2],[2,3],[3,4],[4,5],[5,6]]
+
+    List<ListX<Integer>> slidingWithIncrement = StreamUtils.sliding(
+        Stream.of(1, 2, 3, 4, 5, 6), 3, 2)
+        .collect(Collectors.toList());
+
+    logger.info("slidingWithIncrement : {}", slidingWithIncrement); // [[1, 2, 3], [3, 4, 5], [5, 6]]
+
+    // TODO - batchBySize function does not exist in ReactiveSeq
+    List<ListX<Integer>> batchingBySize = StreamUtils.batchBySize(
+        ReactiveSeq.of(1, 2, 3, 4, 5, 6)
+            .map(n -> TestUtils.mayBeSlow(n)),
+        4)
+        .collect(Collectors.toList());
+
+    logger.info("batchingBySize : {}", batchingBySize); // [[1,2,3,4],[5,6]]
+
+    // Batching returns a List whereas windowing returns a Streamable...
+
+    // TODO - batchBySize function does not exist in ReactiveSeq
+    List<Streamable<Integer>> windowBySize = StreamUtils.windowByTime(
+        ReactiveSeq.of(1, 2, 3, 4, 5, 6)
+            .map(n -> TestUtils.mayBeSlow(n)),
+        20, TimeUnit.MICROSECONDS)
+        .collect(Collectors.toList());
+
+    logger.info("windowBySize : {}", windowBySize); // [results will vary]
+
+  }
+
+  /**
+   * 
+   */
+  @Test
+  public void testStreamModification() {
+    logger.info(TestUtils.getMethodName());
+
+    List<String> prepend = StreamUtils.prepend(Stream.of(1, 2, 3), 100, 200, 300)
+        .map(it -> it + "!!")
+        .collect(Collectors.toList());
+
+    logger.info("prepend : {}", prepend); // [100!!, 200!!, 300!!, 1!!, 2!!, 3!!]
+
+    List<String> append = ReactiveSeq.of(1, 2, 3)
+        .append(100, 200, 300)
+        .map(it -> it + "!!")
+        .toList();
+
+    logger.info("append : {}", append); // [1!!, 2!!, 3!!, 100!!, 200!!, 300!!]
+
+    List<String> insertAt = ReactiveSeq.of(1, 2, 3)
+        .insertAt(1, 100, 200, 300)
+        .map(it -> it + "!!")
+        .collect(Collectors.toList());
+
+    logger.info("insertAt : {}", insertAt); // [1!!, 100!!, 200!!, 300!!, 2!!, 3!!]
+
+  }
 }
