@@ -3,6 +3,7 @@ package cyclops.react;
 import java.io.Closeable;
 import java.io.File;
 import java.lang.invoke.MethodHandles;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -13,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jooq.lambda.Window;
+import org.jooq.lambda.tuple.Tuple;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -255,8 +258,26 @@ public class StreamsTest {
 
   }
 
+  /**
+   * Sliding produces a sliding view over a Stream, there are two sliding
+   * operators - one that takes just the window size and another that takes
+   * window size and the increment to be applied.
+   * 
+   * Batch / Window by size allows elements to be grouped as they flow through
+   * the Stream into Lists or Streamables of the specified size.
+   * 
+   * Batch / Window by time group elements into either a List (Batch) or
+   * Streamable (Window) based on the time bucket they pass through the Stream.
+   * 
+   * Much like batchBySize groups elements into Lists based on the specified
+   * list size, and windowBySize organises streaming elements into Streamables
+   * by time bucket- batchBySizeAndTime / windowBySizeAndTime populates Lists
+   * (or Streamables) based on which ever criteria is met first. Should the
+   * max size be reached the List / Streamable is ready to move down stream,
+   * should the max time elaspe - ditto.
+   */
   @Test
-  public void testBatchingSlidingWindowing() {
+  public void testGroupingSlidingWindowing() {
     logger.info(TestUtils.getMethodName());
 
     List<ListX<Integer>> sliding = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
@@ -271,18 +292,14 @@ public class StreamsTest {
 
     logger.info("slidingWithIncrement : {}", slidingWithIncrement); // [[1, 2, 3], [3, 4, 5], [5, 6]]
 
-    // TODO - batchBySize function does not exist in ReactiveSeq
-    List<ListX<Integer>> batchingBySize = StreamUtils.batchBySize(
-        ReactiveSeq.of(1, 2, 3, 4, 5, 6)
-            .map(n -> TestUtils.mayBeSlow(n)),
-        4)
-        .collect(Collectors.toList());
+    List<ListX<Integer>> grouped = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
+        .map(n -> TestUtils.mayBeSlow(n))
+        .grouped(4)
+        .toList();
 
-    logger.info("batchingBySize : {}", batchingBySize); // [[1,2,3,4],[5,6]]
+    logger.info("grouped : {}", grouped); // [[1,2,3,4],[5,6]]
 
     // Batching returns a List whereas windowing returns a Streamable...
-
-    // TODO - batchBySize function does not exist in ReactiveSeq
     List<Streamable<Integer>> windowBySize = StreamUtils.windowByTime(
         ReactiveSeq.of(1, 2, 3, 4, 5, 6)
             .map(n -> TestUtils.mayBeSlow(n)),
@@ -291,10 +308,46 @@ public class StreamsTest {
 
     logger.info("windowBySize : {}", windowBySize); // [results will vary]
 
+    // TODO function windowBySizeAndTime does not exist!
+
   }
 
   /**
-   * 
+   * jOOl based windowing implements SQL windowing operations for Streams.
+   * The jOOλ functions are exceptionally powerful and flexible, but also consume
+   * the Stream. This means they will not perform as well as the simpler (but
+   * less powerful) batchBy, windowBy and sliding functions in cyclops-react.
+   * They are also not suitable for use in infinitely large Streams.
+   */
+  @Test
+  public void testJOOlWindowing() {
+    logger.info(TestUtils.getMethodName());
+
+    List<Optional<Integer>> result = ReactiveSeq.of(1, 2, 4, 2, 3)
+        .window(i -> i % 2, Comparator.naturalOrder())
+        .peek(i -> logger.info(i.toString()))
+        .map(Window::min)
+        .toList();
+
+    logger.info("windowBySize : {}", result); // (1, 2, 2, 2, 1)
+
+    String windowTuple = ReactiveSeq.of("a", "a", "a", "b", "c", "c", "d", "e")
+        .window(Comparator.naturalOrder())
+        .map(w -> Tuple.tuple(
+            w.value(), // v0
+            w.count(), // v1
+            w.median(), // v2
+            w.lead(), // v3
+            w.lag(), // v4
+            w.toString() // v5
+        ))
+        .format();
+
+    logger.info("windowTuple:\n{}", windowTuple);
+  }
+
+  /**
+   * self-explanatory stream modification functions...
    */
   @Test
   public void testStreamModification() {
