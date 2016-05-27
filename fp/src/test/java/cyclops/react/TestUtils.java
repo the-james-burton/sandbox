@@ -18,11 +18,30 @@ public class TestUtils {
     return Thread.currentThread().getStackTrace()[2].getMethodName();
   }
 
+  /** 
+   * converts an integer to string, but might throw a RuntimeException...
+   * @param i integer
+   * @return i.toString() or RuntimeException
+   */
   public static String toStringMayThrowError(Integer i) {
     if (i == 2) {
       throw new RuntimeException("I hate you");
     }
     return i.toString();
+  }
+
+  /**
+   * either multiplies the given Integer by 2 or throws RuntimeException...
+   * @param i integer
+   * @return i * 2 or RuntimeException
+   */
+  public static Integer randomFails(Integer i) {
+    if (Math.random() < 0.5) {
+      logger.info("{}: simulated fail", i);
+      throw new RuntimeException("I hate you!");
+    }
+    logger.info("{}: simulated fail", i);
+    return i * 2;
   }
 
   /**

@@ -199,7 +199,7 @@ public class StreamsTest {
         .forEachEvent(
             i -> result.add(i),
             e -> errors.add(e),
-            // TODO can't seem to do this with Try..?
+            // TODO can't seem to do this with Try or ExceptionSoftener..?
             // Try.run(() -> resource.close()));
             () -> TestUtils.safeClose(resource));
     logger.info("result : {}", result);
@@ -408,6 +408,30 @@ public class StreamsTest {
     // [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
     logger.info("testHeadAndTail : {}", testHeadAndTail);
 
+  }
+
+  @Test
+  public void testExceptions() {
+    logger.info(TestUtils.getMethodName());
+
+    List<String> exceptions = ReactiveSeq.of(1, 2, 3, 4)
+        .map(i -> TestUtils.toStringMayThrowError(i))
+        .recover(Exception.class, e -> e.getMessage())
+        .toList();
+
+    logger.info("exceptions : {}", exceptions);
+
+  }
+
+  @Test
+  public void testRetry() {
+    logger.info(TestUtils.getMethodName());
+
+    List<Integer> retry = ReactiveSeq.of(1, 2, 3, 4, 5, 6, 7, 8)
+        .retry(i -> TestUtils.randomFails(i))
+        .toList();
+
+    logger.info("retry : {}", retry);
   }
 
 }
