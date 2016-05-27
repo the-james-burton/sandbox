@@ -7,6 +7,9 @@ import java.lang.invoke.MethodHandles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aol.cyclops.control.ReactiveSeq;
+import com.aol.cyclops.types.stream.HeadAndTail;
+
 public class TestUtils {
 
   private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -51,6 +54,27 @@ public class TestUtils {
       }
     }
     return n;
+  }
+
+  /**
+   * recursive function to compute the Sieve of Eratosthenes using streams
+   * based on the cyclops-react streams user guide
+   * @param s the stream of numbers to sieve
+   * @return the numbers sieved
+   */
+  public static ReactiveSeq<Integer> sieve(ReactiveSeq<Integer> s) {
+    HeadAndTail<Integer> ht = s.headAndTail();
+
+    // if empty then return empty...
+    // TODO rewrite using native guard support?
+    if (!ht.isHeadPresent()) {
+      return ReactiveSeq.of();
+    }
+
+    // otherwise return the head plus the tail with all divisors of head removed...
+    return ReactiveSeq.of(ht.head())
+        .appendStream(sieve(ht.tail()
+            .filter(n -> n % ht.head() != 0)));
   }
 
 }

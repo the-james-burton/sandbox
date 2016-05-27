@@ -313,7 +313,7 @@ public class StreamsTest {
   }
 
   /**
-   * jOOl based windowing implements SQL windowing operations for Streams.
+   * jOOλ based windowing implements SQL windowing operations for Streams.
    * The jOOλ functions are exceptionally powerful and flexible, but also consume
    * the Stream. This means they will not perform as well as the simpler (but
    * less powerful) batchBy, windowBy and sliding functions in cyclops-react.
@@ -323,13 +323,28 @@ public class StreamsTest {
   public void testJOOlWindowing() {
     logger.info(TestUtils.getMethodName());
 
-    List<Optional<Integer>> result = ReactiveSeq.of(1, 2, 4, 2, 3)
+    String windowBySizeFormat = ReactiveSeq.of(1, 2, 4, 2, 3)
+        .window(i -> i % 2)
+        .map(w -> Tuple.tuple(
+            w.value(),
+            w.value() % 2,
+            w.rowNumber(),
+            w.rank(),
+            w.denseRank(),
+            w.toString()))
+        .format();
+
+    logger.info("windowBySizeFormat\n{}", windowBySizeFormat); // min: [1, 2, 2, 2, 1] max : [1, 2, 4, 2, 3]
+
+    List<Optional<Integer>> windowBySize = ReactiveSeq.of(1, 2, 4, 2, 3)
         .window(i -> i % 2, Comparator.naturalOrder())
         .peek(i -> logger.info(i.toString()))
-        .map(Window::min)
+        .map(Window::max)
         .toList();
 
-    logger.info("windowBySize : {}", result); // (1, 2, 2, 2, 1)
+    // TODO why does the naturalOrder() seem to make this crazy? Surely 1,2,4,4,3 is correct?
+
+    logger.info("windowBySize : {}", windowBySize); // min: [1, 2, 2, 2, 1] max : [1, 2, 4, 2, 3]
 
     String windowTuple = ReactiveSeq.of("a", "a", "a", "b", "c", "c", "d", "e")
         .window(Comparator.naturalOrder())
@@ -373,5 +388,26 @@ public class StreamsTest {
 
     logger.info("insertAt : {}", insertAt); // [1!!, 100!!, 200!!, 300!!, 2!!, 3!!]
 
+    List<String> deleteBetween = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
+        .deleteBetween(2, 4)
+        .map(it -> it + "!!")
+        .toList();
+
+    logger.info("deleteBetween : {}", deleteBetween); // ["1!!","2!!","5!!","6!!"]
+
   }
+
+  @Test
+  public void testHeadAndTail() {
+    logger.info(TestUtils.getMethodName());
+
+    ReactiveSeq<Integer> s = ReactiveSeq.range(2, 100);
+    List<Integer> testHeadAndTail = null;
+    testHeadAndTail = TestUtils.sieve(s).toList();
+
+    // [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+    logger.info("testHeadAndTail : {}", testHeadAndTail);
+
+  }
+
 }
