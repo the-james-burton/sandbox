@@ -3,6 +3,7 @@ package cyclops.react;
 import java.io.Closeable;
 import java.io.File;
 import java.lang.invoke.MethodHandles;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +18,7 @@ import java.util.stream.Stream;
 
 import org.jooq.lambda.Window;
 import org.jooq.lambda.tuple.Tuple;
+import org.jooq.lambda.tuple.Tuple2;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -488,7 +490,7 @@ public class StreamsTest {
    * data is not lost, but rather queued and will be emitted when the
    * next time gate opens. For an operator that drops data see debounce.
    * 
-   * simple-react’s LazyFutureStream is a parellel implementation of ReactiveSeq
+   * simple-react’s LazyFutureStream is a parallel implementation of ReactiveSeq
    * 
    * Tip : The xPer operator works in a similar fashion but allows only
    * a specified number of elements through per time period. The elements
@@ -497,13 +499,37 @@ public class StreamsTest {
    */
   @Test
   public void testOnePer() {
+    logger.info(TestUtils.getMethodName());
 
     ReactiveSeq.iterate(0, it -> it + 1)
-        .limit(100)
+        .limit(10)
         .onePer(10, TimeUnit.MILLISECONDS)
         .map(i -> i + "!!")
         .peek(i -> logger.info(i.toString()))
         .toList();
+
+  }
+
+  /**
+   * A number of the cyclops-react zip operators allow a custom zipper
+   * to be supplied (typically a BiFunction that allows users to determine 
+   * ow the Streams should be merged).
+   */
+  @Test
+  public void testZip() {
+    logger.info(TestUtils.getMethodName());
+
+    List<Tuple2<Integer, Integer>> zipOne = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
+        .zip(ReactiveSeq.of(100, 200, 300, 400))
+        .toList();
+
+    logger.info("zipOne : {}", zipOne); // [(1, 100), (2, 200), (3, 300), (4, 400)]
+
+    List<List<Integer>> zipWith = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
+        .zip(ReactiveSeq.of(100, 200, 300, 400), (a, b) -> Arrays.asList(a, b))
+        .toList();
+
+    logger.info("zipWith : {}", zipWith); // [[1, 100], [2, 200], [3, 300], [4, 400]]
 
   }
 
