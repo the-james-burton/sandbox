@@ -397,6 +397,10 @@ public class StreamsTest {
 
   }
 
+  /**
+   * We can use head and tail to do recursive operations, similar to real
+   * FP languages...
+   */
   @Test
   public void testHeadAndTail() {
     logger.info(TestUtils.getMethodName());
@@ -410,6 +414,9 @@ public class StreamsTest {
 
   }
 
+  /**
+   * 
+   */
   @Test
   public void testExceptions() {
     logger.info(TestUtils.getMethodName());
@@ -429,6 +436,27 @@ public class StreamsTest {
 
     List<Integer> retry = ReactiveSeq.of(1, 2, 3, 4, 5, 6, 7, 8)
         .retry(i -> TestUtils.randomFails(i))
+        .toList();
+
+    logger.info("retry : {}", retry);
+  }
+
+  /**
+   * Retry allows a function to be retried. By default retry occurs up
+   * to 5 times with an exponential backoff.
+   * 
+   * Note: simple-react users should note that the implementation in LazyFutureStream
+   * is a significantly more advanced asynchronous retry (making use of
+   * Tomasz Nurkiewicz async retry library).
+  
+   * https://github.com/aol/cyclops-react/issues/220
+   */
+  @Test
+  public void testRetryBackoff() {
+    logger.info(TestUtils.getMethodName());
+
+    List<Integer> retry = ReactiveSeq.of(1, 2, 3, 4, 5, 6, 7, 8)
+        .retry(i -> TestUtils.alwaysThrowException(i), 5, 100, TimeUnit.MILLISECONDS)
         .toList();
 
     logger.info("retry : {}", retry);

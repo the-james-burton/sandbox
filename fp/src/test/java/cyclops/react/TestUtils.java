@@ -40,8 +40,13 @@ public class TestUtils {
       logger.info("{}: simulated fail", i);
       throw new RuntimeException("I hate you!");
     }
-    logger.info("{}: simulated fail", i);
+    logger.info("{}: success", i);
     return i * 2;
+  }
+
+  public static Integer alwaysThrowException(Integer i) {
+    logger.info("{}: failed", i);
+    throw new RuntimeException("I hate you!");
   }
 
   /**
