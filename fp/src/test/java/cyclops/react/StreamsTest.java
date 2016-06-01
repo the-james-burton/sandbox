@@ -10,6 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.aol.cyclops.control.ReactiveSeq;
 import com.aol.cyclops.data.collections.extensions.standard.ListX;
+import com.aol.cyclops.types.stream.HotStream;
 import com.aol.cyclops.types.stream.future.FutureOperations;
 import com.aol.cyclops.types.stream.reactive.ReactiveTask;
 import com.aol.cyclops.types.stream.reactive.SeqSubscriber;
@@ -460,6 +462,49 @@ public class StreamsTest {
         .toList();
 
     logger.info("retry : {}", retry);
+  }
+
+  @Test
+  public void testSchedule() {
+    logger.info(TestUtils.getMethodName());
+
+    ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
+
+    HotStream<Integer> stream = ReactiveSeq.of(1, 2, 3, 4)
+        .peek(i -> logger.info("schedule: {}", i.toString()))
+        .schedule("* * * * * ?", exec);
+
+    List<Integer> scheduled = stream.connect()
+        // .debounce(1, TimeUnit.SECONDS)
+        .peek(i -> logger.info("hot: {}", i.toString()))
+        .toList();
+
+    logger.info("scheduled : {}", scheduled);
+
+  }
+
+  /**
+   * onePer ensures that only one element is emitted per time period,
+   * data is not lost, but rather queued and will be emitted when the
+   * next time gate opens. For an operator that drops data see debounce.
+   * 
+   * simple-react’s LazyFutureStream is a parellel implementation of ReactiveSeq
+   * 
+   * Tip : The xPer operator works in a similar fashion but allows only
+   * a specified number of elements through per time period. The elements
+   * will be emtted as soon as they are available, which may cause the
+   * emissions to bunch at the start of the time period.
+   */
+  @Test
+  public void testOnePer() {
+
+    ReactiveSeq.iterate(0, it -> it + 1)
+        .limit(100)
+        .onePer(10, TimeUnit.MILLISECONDS)
+        .map(i -> i + "!!")
+        .peek(i -> logger.info(i.toString()))
+        .toList();
+
   }
 
 }
