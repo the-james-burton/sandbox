@@ -3,6 +3,7 @@ package cyclops.react;
 import java.io.Closeable;
 import java.io.File;
 import java.lang.invoke.MethodHandles;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -575,9 +576,40 @@ public class StreamsTest {
         .limit(3)
         .forEach(i -> logger.info("skipUntil:{}", i.toString()));
 
-    // hotStream
-    // .connect()
-    // .limitWhile(i -> i < 10).
+  }
+
+  /**
+   * In addition to inhertiting flatMap from Stream, crossJoin, leftOuterJoin and
+   * innerJoin from jOOλ, cyclops-react offers a number of additional flatMap methods
+   * that accept a Function that returns a value that can be converted (implicitly)
+   * to Stream.
+   * The flatMapFile operator Streams the content of the returned File as a String. It
+   * is syntax sugar for loading the File to a Stream of Strings inside the function 
+   *  to the standard Stream flatMap method.
+   */
+  @Test
+  public void testFiles() {
+    logger.info(TestUtils.getMethodName());
+
+    // TODO - many flapMap* functions are not present on ReactiveSeq...
+
+    Stream<String> stream = Stream.of("words.txt")
+        .map(getClass().getClassLoader()::getResource)
+        .peek(f -> logger.info(f.toString()))
+        .map(URL::getFile);
+
+    List<String> flatMapFile = StreamUtils
+        .flatMapFile(stream, File::new)
+        .map(w -> w + "!!")
+        .collect(Collectors.toList());
+
+    logger.info("flatMapFile : {}", flatMapFile); // []
+
+    // possibly simpler method...
+
+    StreamUtils.flatMapURL(ReactiveSeq.of("words.txt"), getClass().getClassLoader()::getResource)
+        .map(w -> w + "##")
+        .forEach(logger::info);
 
   }
 
