@@ -533,4 +533,52 @@ public class StreamsTest {
 
   }
 
+  /**
+   * The JDK Streams api has operators limit and skip as of Java 8. The naming of
+   * these operators is relatively unusual compared with other languages where
+   * take / drop is more common. JDK 9 looks set to introduce new operators such
+   * as takeWhile & dropWile (maintaining the old limit and skip operators also).
+   * cclops-react offers many of these operators already, although we currently
+   * extend (like jOOλ) the JDK 8 naming convention and use limitWhile and skipWhile.
+   * 
+   * This test also shows how to reuse hot streams...
+   */
+  @Test
+  public void testLimitSkip() {
+    logger.info(TestUtils.getMethodName());
+
+    final Executor exec = Executors.newFixedThreadPool(1);
+
+    HotStream<Integer> hotStream = ReactiveSeq
+        .range(1, 100)
+        .peek(i -> TestUtils.slowFunction(i))
+        .peek(i -> logger.info("producer:{}", i.toString()))
+        .primedHotStream(exec);
+
+    List<Integer> list = hotStream
+        .connect()
+        .limit(3)
+        .toList();
+
+    logger.info("list : {}", list);
+
+    // can also use .forEach to consume the stream in real time...
+
+    hotStream
+        .connect()
+        .limit(300, TimeUnit.MILLISECONDS)
+        .forEach(i -> logger.info("limit for time:{}", i.toString()));
+
+    hotStream
+        .connect()
+        .skipUntil(i -> i == 15)
+        .limit(3)
+        .forEach(i -> logger.info("skipUntil:{}", i.toString()));
+
+    // hotStream
+    // .connect()
+    // .limitWhile(i -> i < 10).
+
+  }
+
 }

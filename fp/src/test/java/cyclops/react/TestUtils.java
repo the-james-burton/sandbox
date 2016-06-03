@@ -81,6 +81,23 @@ public class TestUtils {
   }
 
   /**
+   * Given an integer will return the same integer, but with a delay
+   * to simulate a longer running process
+   * @param n
+   * @return n
+   * @throws InterruptedException
+   */
+  public static Integer slowFunction(Integer n) {
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    return n;
+  }
+
+  /**
    * recursive function to compute the Sieve of Eratosthenes using streams
    * based on the cyclops-react streams user guide
    * @param s the stream of numbers to sieve
