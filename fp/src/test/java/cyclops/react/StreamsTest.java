@@ -20,7 +20,10 @@ import java.util.stream.Stream;
 import org.jooq.lambda.Window;
 import org.jooq.lambda.tuple.Tuple;
 import org.jooq.lambda.tuple.Tuple2;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +50,14 @@ public class StreamsTest {
 
   private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+  @Rule
+  public TestName name = new TestName();
+
+  @Before
+  public void before() {
+    logger.info(name.getMethodName());
+  }
+
   /**
    * StreamUtils provides a large range of additional operators for standard Java 8 Streams,
    * these include operators for batching & windowing, error handling and retrying,
@@ -55,8 +66,6 @@ public class StreamsTest {
    */
   @Test
   public void testStreamUtils() {
-    logger.info(TestUtils.getMethodName());
-
     List<String> result = StreamUtils
         .deleteBetween(Stream.of(1, 2, 3, 4, 5, 6), 2, 4)
         .map(it -> it + "!!")
@@ -69,8 +78,6 @@ public class StreamsTest {
    */
   @Test
   public void testStreamable() {
-    logger.info(TestUtils.getMethodName());
-
     Optional<Integer> result = Streamable
         .of(1, 2, 3)
         .map(i -> i + 1)
@@ -85,8 +92,6 @@ public class StreamsTest {
    */
   @Test
   public void testHotStreams() {
-    logger.info(TestUtils.getMethodName());
-
     final Executor exec = Executors.newFixedThreadPool(1);
     ReactiveSeq.range(0, Integer.MAX_VALUE)
         .limit(5)
@@ -101,8 +106,6 @@ public class StreamsTest {
    */
   @Test
   public void testHotStreamsConnect() {
-    logger.info(TestUtils.getMethodName());
-
     final Executor exec = Executors.newFixedThreadPool(1);
 
     ReactiveSeq.range(0, Integer.MAX_VALUE)
@@ -125,8 +128,6 @@ public class StreamsTest {
    */
   @Test
   public void testHotStreamsBackPressure() {
-    logger.info(TestUtils.getMethodName());
-
     final Executor exec = Executors.newFixedThreadPool(1);
     final ArrayBlockingQueue<String> blockingQueue = Queues.newArrayBlockingQueue(3);
 
@@ -152,8 +153,6 @@ public class StreamsTest {
    */
   @Test
   public void testPublishSubscribe() {
-    logger.info(TestUtils.getMethodName());
-
     final SeqSubscriber<Integer> subscriber = ReactiveSeq.subscriber();
     final ReactiveSeq<Integer> queue = ReactiveSeq.of(1, 2, 3, 4);
 
@@ -172,8 +171,6 @@ public class StreamsTest {
    */
   @Test
   public void testForEachWithError() {
-    logger.info(TestUtils.getMethodName());
-
     final List<String> result = Lists.newArrayList();
     final List<Throwable> errors = Lists.newArrayList();
     ReactiveSeq.of(1, 2, 3, 4)
@@ -192,8 +189,6 @@ public class StreamsTest {
    */
   @Test
   public void testForEachEvent() throws Exception {
-    logger.info(TestUtils.getMethodName());
-
     final File file = File.createTempFile("test", "txt");
     final Closeable resource = Files.newWriter(file, Charsets.UTF_8);
     final List<String> result = Lists.newArrayList();
@@ -221,8 +216,6 @@ public class StreamsTest {
    */
   @Test
   public void testFutureOperations() {
-    logger.info(TestUtils.getMethodName());
-
     Executor exec = Executors.newFixedThreadPool(1);
     FutureOperations<Integer> terminalOps = StreamUtils.futureOperations(Stream.of(1, 2, 3), exec);
 
@@ -244,8 +237,6 @@ public class StreamsTest {
    */
   @Test
   public void testReactiveTask() {
-    logger.info(TestUtils.getMethodName());
-
     Executor exec = Executors.newFixedThreadPool(1);
     List<Integer> result = Lists.newArrayList();
     ReactiveTask s = ReactiveSeq.of(1, 2, 3, 4)
@@ -283,8 +274,6 @@ public class StreamsTest {
    */
   @Test
   public void testGroupingSlidingWindowing() {
-    logger.info(TestUtils.getMethodName());
-
     List<ListX<Integer>> sliding = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
         .sliding(2)
         .toList();
@@ -326,8 +315,6 @@ public class StreamsTest {
    */
   @Test
   public void testJOOlWindowing() {
-    logger.info(TestUtils.getMethodName());
-
     String windowBySizeFormat = ReactiveSeq.of(1, 2, 4, 2, 3)
         .window(i -> i % 2)
         .map(w -> Tuple.tuple(
@@ -371,8 +358,6 @@ public class StreamsTest {
    */
   @Test
   public void testStreamModification() {
-    logger.info(TestUtils.getMethodName());
-
     List<String> prepend = StreamUtils.prepend(Stream.of(1, 2, 3), 100, 200, 300)
         .map(it -> it + "!!")
         .collect(Collectors.toList());
@@ -408,8 +393,6 @@ public class StreamsTest {
    */
   @Test
   public void testHeadAndTail() {
-    logger.info(TestUtils.getMethodName());
-
     ReactiveSeq<Integer> s = ReactiveSeq.range(2, 100);
     List<Integer> testHeadAndTail = null;
     testHeadAndTail = TestUtils.sieve(s).toList();
@@ -424,8 +407,6 @@ public class StreamsTest {
    */
   @Test
   public void testExceptions() {
-    logger.info(TestUtils.getMethodName());
-
     List<String> exceptions = ReactiveSeq.of(1, 2, 3, 4)
         .map(i -> TestUtils.toStringMayThrowError(i))
         .recover(Exception.class, e -> e.getMessage())
@@ -437,8 +418,6 @@ public class StreamsTest {
 
   @Test
   public void testRetry() {
-    logger.info(TestUtils.getMethodName());
-
     List<Integer> retry = ReactiveSeq.of(1, 2, 3, 4, 5, 6, 7, 8)
         .retry(i -> TestUtils.randomFails(i))
         .toList();
@@ -458,8 +437,6 @@ public class StreamsTest {
    */
   @Test
   public void testRetryBackoff() {
-    logger.info(TestUtils.getMethodName());
-
     List<Integer> retry = ReactiveSeq.of(1, 2, 3, 4, 5, 6, 7, 8)
         .retry(i -> TestUtils.alwaysThrowException(i), 5, 100, TimeUnit.MILLISECONDS)
         .toList();
@@ -469,8 +446,6 @@ public class StreamsTest {
 
   @Test
   public void testSchedule() {
-    logger.info(TestUtils.getMethodName());
-
     ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
 
     HotStream<Integer> stream = ReactiveSeq.of(1, 2, 3, 4)
@@ -500,8 +475,6 @@ public class StreamsTest {
    */
   @Test
   public void testOnePer() {
-    logger.info(TestUtils.getMethodName());
-
     ReactiveSeq.iterate(0, it -> it + 1)
         .limit(10)
         .onePer(10, TimeUnit.MILLISECONDS)
@@ -518,8 +491,6 @@ public class StreamsTest {
    */
   @Test
   public void testZip() {
-    logger.info(TestUtils.getMethodName());
-
     List<Tuple2<Integer, Integer>> zipOne = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
         .zip(ReactiveSeq.of(100, 200, 300, 400))
         .toList();
@@ -546,8 +517,6 @@ public class StreamsTest {
    */
   @Test
   public void testLimitSkip() {
-    logger.info(TestUtils.getMethodName());
-
     final Executor exec = Executors.newFixedThreadPool(1);
 
     HotStream<Integer> hotStream = ReactiveSeq
@@ -589,8 +558,6 @@ public class StreamsTest {
    */
   @Test
   public void testFiles() {
-    logger.info(TestUtils.getMethodName());
-
     // TODO - many flapMap* functions are not present on ReactiveSeq...
 
     Stream<String> stream = Stream.of("words.txt")
@@ -610,6 +577,11 @@ public class StreamsTest {
     StreamUtils.flatMapURL(ReactiveSeq.of("words.txt"), getClass().getClassLoader()::getResource)
         .map(w -> w + "##")
         .forEach(logger::info);
+
+  }
+
+  @Test
+  public void testFlatMap() {
 
   }
 

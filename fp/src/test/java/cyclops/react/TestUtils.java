@@ -14,10 +14,6 @@ public class TestUtils {
 
   private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  public static String getMethodName() {
-    return Thread.currentThread().getStackTrace()[2].getMethodName();
-  }
-
   /** 
    * converts an integer to string, but might throw a RuntimeException...
    * @param i integer
