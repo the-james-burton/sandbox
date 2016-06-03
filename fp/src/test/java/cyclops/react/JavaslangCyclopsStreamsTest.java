@@ -18,13 +18,26 @@ public class JavaslangCyclopsStreamsTest {
 
   @Test
   public void testDeleteBetween() {
+    logger.info(TestUtils.getMethodName());
+
     javaslang.collection.List<Integer> jsSeq = javaslang.collection.List.of(1, 2, 3, 4, 5, 6);
     ReactiveSeq<Integer> traversable = Javaslang.traversable(jsSeq).stream();
 
-    List<String> result = StreamUtils.deleteBetween(traversable, 2, 4)
+    List<String> deleteBetween = StreamUtils.deleteBetween(traversable, 2, 4)
         .map(it -> it + "!!")
         .collect(Collectors.toList());
-    logger.info("result: {}", result);
+
+    logger.info("deleteBetween", deleteBetween);
   }
 
+  @Test
+  public void testFlatMap() throws Exception {
+    logger.info(TestUtils.getMethodName());
+
+    List<Integer> flatMapAnyM = ReactiveSeq.of(1, 2, 3)
+        .flatMapAnyM(i -> Javaslang.traversable(javaslang.collection.List.of(i + 1, i + 2, i + 3)))
+        .collect(Collectors.toList());
+
+    logger.info("flatMapAnyM: {}", flatMapAnyM); // List[2,3,4,3,4,5,4,5,6]
+  }
 }
