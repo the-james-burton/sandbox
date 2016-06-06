@@ -435,7 +435,7 @@ public class StreamsTest {
   
    * https://github.com/aol/cyclops-react/issues/220
    */
-  @Test
+  @Test(expected = RuntimeException.class)
   public void testRetryBackoff() {
     List<Integer> retry = ReactiveSeq.of(1, 2, 3, 4, 5, 6, 7, 8)
         .retry(i -> TestUtils.alwaysThrowException(i), 5, 100, TimeUnit.MILLISECONDS)
@@ -580,8 +580,55 @@ public class StreamsTest {
 
   }
 
+  /**
+   * crossJoin (inherited from jOOλ) joins two Streams by pairing every possible
+   * combination of values from both Streams
+   * 
+   * The innerJoin operator (inherited from jOOλ) joins two Streams in a similar
+   * manner to crossJoin but allows a filtering BiPredicate to be applied.
+   * 
+   * The leftOuterJoin retains all elements from the host ReactiveSeq and joins
+   * them with elements in the supplied Stream where the predicate matches, where the 
+   * predicate fails null is used.
+   * 
+   * The rightOuterJoin retains all elements from the supplied ReactiveSeq and
+   * joins them with elements in the host Stream where the predicate matches, where
+   * the predicate fails null is used.
+   */
   @Test
-  public void testFlatMap() {
+  public void testJoin() {
+    ReactiveSeq<Integer> sa = ReactiveSeq.of(1, 2, 3);
+    ReactiveSeq<Integer> sb = ReactiveSeq.of(10, 20, 30);
+
+    List<Tuple2<Integer, Integer>> crossJoin = sb.crossJoin(sa).toList();
+
+    logger.info("crossJoin : {}", crossJoin); // [(10, 1), (10, 2), (10, 3), (20, 1), (20, 2), (20, 3), (30, 1), (30, 2), (30, 3)]
+
+    sa = ReactiveSeq.of(1, 2, 3);
+    sb = ReactiveSeq.of(10, 20, 30);
+
+    List<Tuple2<Integer, Integer>> innerJoin = sb.innerJoin(sa, (a, b) -> b > 2).toList();
+
+    logger.info("innerJoin : {}", innerJoin); // [(10, 3), (20, 3), (30, 3)]
+
+    sa = ReactiveSeq.of(1, 2, 3);
+    sb = ReactiveSeq.of(10, 20, 30);
+
+    List<Tuple2<Integer, Integer>> leftOuterJoin = sb.leftOuterJoin(sa, (a, b) -> a > 20).toList();
+
+    logger.info("leftOuterJoin : {}", leftOuterJoin); // [(10, null), (20, null), (30, 1), (30, 2), (30, 3)]
+
+    sa = ReactiveSeq.of(1, 2, 3);
+    sb = ReactiveSeq.of(10, 20, 30);
+
+    List<Tuple2<Integer, Integer>> rightOuterJoin = sb.rightOuterJoin(sa, (a, b) -> b > 2).toList();
+
+    logger.info("rightOuterJoin : {}", rightOuterJoin); // [(null, 1), (null, 2), (10, 3), (20, 3), (30, 3)]
+
+  }
+
+  @Test
+  public void testForComprehensions() {
 
   }
 
