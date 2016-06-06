@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.jooq.lambda.Window;
@@ -287,7 +288,7 @@ public class StreamsTest {
     logger.info("slidingWithIncrement : {}", slidingWithIncrement); // [[1, 2, 3], [3, 4, 5], [5, 6]]
 
     List<ListX<Integer>> grouped = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
-        .map(n -> TestUtils.mayBeSlow(n))
+        .map(n -> TestUtils.sometimesSlowFunction(n))
         .grouped(4)
         .toList();
 
@@ -296,7 +297,7 @@ public class StreamsTest {
     // Batching returns a List whereas windowing returns a Streamable...
     List<Streamable<Integer>> windowBySize = StreamUtils.windowByTime(
         ReactiveSeq.of(1, 2, 3, 4, 5, 6)
-            .map(n -> TestUtils.mayBeSlow(n)),
+            .map(n -> TestUtils.sometimesSlowFunction(n)),
         20, TimeUnit.MICROSECONDS)
         .collect(Collectors.toList());
 
@@ -419,7 +420,7 @@ public class StreamsTest {
   @Test
   public void testRetry() {
     List<Integer> retry = ReactiveSeq.of(1, 2, 3, 4, 5, 6, 7, 8)
-        .retry(i -> TestUtils.randomFails(i))
+        .retry(i -> TestUtils.sometimesThrowException(i))
         .toList();
 
     logger.info("retry : {}", retry);
@@ -521,7 +522,7 @@ public class StreamsTest {
 
     HotStream<Integer> hotStream = ReactiveSeq
         .range(1, 100)
-        .peek(i -> TestUtils.slowFunction(i))
+        .peek(i -> TestUtils.alwaysSlowFunction(i))
         .peek(i -> logger.info("producer:{}", i.toString()))
         .primedHotStream(exec);
 
@@ -629,6 +630,25 @@ public class StreamsTest {
 
   @Test
   public void testForComprehensions() {
+
+    List<Integer> forEach2 = ReactiveSeq.of(1, 2, 3)
+        .forEach2(
+            a -> IntStream.of(10, 20, 30),
+            a -> b -> a + b)
+        .toList();
+
+    logger.info("forEach2 : {}", forEach2); // [11, 21, 31, 12, 22, 32, 13, 23, 33]
+
+    // TODO forEach3 does not appear to compile yet...
+
+    // ReactiveSeq.of(1, 2, 3)
+    // .forEach3(
+    // a -> IntStream.of(10, 20, 30),
+    // a -> b -> IntStream.of(100, 200, 300),
+    // a -> b -> c -> a + b + c)
+    // .toList();
+    //
+    // logger.info("forEach3 : {}", forEach3);
 
   }
 

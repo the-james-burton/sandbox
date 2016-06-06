@@ -16,32 +16,38 @@ public class TestUtils {
 
   /** 
    * converts an integer to string, but might throw a RuntimeException...
+   * @param <T>
    * @param i integer
    * @return i.toString() or RuntimeException
    */
-  public static String toStringMayThrowError(Integer i) {
-    if (i == 2) {
+  public static <T extends Number> String toStringMayThrowError(T i) {
+    if (Math.random() < 0.5) {
       throw new RuntimeException("I hate you");
     }
     return i.toString();
   }
 
   /**
-   * either multiplies the given Integer by 2 or throws RuntimeException...
+   * either multiplies the given number by 2 or throws RuntimeException...
    * @param i integer
    * @return i * 2 or RuntimeException
    */
-  public static Integer randomFails(Integer i) {
+  public static <T extends Number> T sometimesThrowException(T i) {
     if (Math.random() < 0.5) {
-      logger.info("{}: simulated fail", i);
+      logger.info("{}: simulated fail", i.toString());
       throw new RuntimeException("I hate you!");
     }
     logger.info("{}: success", i);
-    return i * 2;
+    return (T) new Integer(i.intValue() * 2);
   }
 
-  public static Integer alwaysThrowException(Integer i) {
-    logger.info("{}: failed", i);
+  /**
+   * always throws a RuntimeException
+   * @param i 
+   * @return
+   */
+  public static <T> T alwaysThrowException(T i) {
+    logger.info("{}: failed", i.toString());
     throw new RuntimeException("I hate you!");
   }
 
@@ -64,10 +70,10 @@ public class TestUtils {
    * @return n
    * @throws InterruptedException
    */
-  public static Integer mayBeSlow(Integer n) {
-    if (n == 6) {
+  public static <T> T sometimesSlowFunction(T n) {
+    if (Math.random() < 0.5) {
       try {
-        Thread.sleep(1);
+        Thread.sleep(100);
       } catch (InterruptedException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
@@ -83,7 +89,7 @@ public class TestUtils {
    * @return n
    * @throws InterruptedException
    */
-  public static Integer slowFunction(Integer n) {
+  public static <T> T alwaysSlowFunction(T n) {
     try {
       Thread.sleep(100);
     } catch (InterruptedException e) {
