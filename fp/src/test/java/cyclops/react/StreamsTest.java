@@ -751,4 +751,57 @@ public class StreamsTest {
 
   }
 
+  /**
+   * In addition to operators on java.util.stream.Stream like anyMatch,
+   * allMatch and noneMatch, cyclops-react offers operators such as xMatch,
+   * endsWith and startsWith. 
+   * 
+   * The endsWith operator returns true if the Stream ends with the specified
+   * iterable or Stream, otherwise it returns false.
+   * 
+   * The xMatch operator returns true if the supplied predicate matches
+   * the supplied number of times.
+   */
+  @Test
+  public void testAssertions() {
+
+    boolean endsWith = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
+        .endsWith(Stream.of(5, 6));
+
+    logger.info("endsWith : {}", endsWith); // true
+
+    boolean xMatch = ReactiveSeq.of(1, 2, 3, 5, 6, 7).xMatch(3, i -> i > 4);
+
+    logger.info("xMatch : {}", xMatch); // true
+
+  }
+
+  /**
+   * foldLeft performs a terminal reduction operation, that starts with
+   * an identity value and the start of the Stream, applying the identiy
+   * value and first value to a user supplied accumulation function, the
+   * second value is then applied to the result and so on until the end
+   * of the Stream when the acummulated result is returned.
+   */
+  @Test
+  public void testFold() {
+
+    String foldLeft1 = Streamable.of("hello", "world")
+        .foldLeft("", (a, b) -> a + ":" + b);
+
+    logger.info("foldLeft1 : {}", foldLeft1); // ":hello:world"
+
+    Integer foldLeft2 = ReactiveSeq.of(1, 2, 3)
+        .foldLeft(0, (a, b) -> a + b);
+
+    logger.info("foldLeft2 : {}", foldLeft2); // 6
+
+    Integer foldLeft3 = StreamUtils.foldLeft(
+        Stream.of(2, 4, 5),
+        Reducers.toTotalInt());
+
+    logger.info("foldLeft3 : {}", foldLeft3); // 11
+
+  }
+
 }
