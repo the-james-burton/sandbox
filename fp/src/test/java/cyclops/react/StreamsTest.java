@@ -28,6 +28,7 @@ import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aol.cyclops.Reducers;
 import com.aol.cyclops.control.ReactiveSeq;
 import com.aol.cyclops.data.collections.extensions.standard.ListX;
 import com.aol.cyclops.types.stream.HotStream;
@@ -386,6 +387,13 @@ public class StreamsTest {
 
     logger.info("deleteBetween : {}", deleteBetween); // ["1!!","2!!","5!!","6!!"]
 
+    List<String> remove = ReactiveSeq.of(1, 2, 3, 4, 5, 6)
+        .remove(2)
+        .map(it -> it + "!!")
+        .toList();
+
+    logger.info("remove : {}", remove); // [1!!, 3!!, 4!!, 5!!, 6!!]
+
   }
 
   /**
@@ -549,6 +557,25 @@ public class StreamsTest {
   }
 
   /**
+   * Convert to a Stream with the result of a reduction operation repeated
+   * specified times.
+   * 
+   * Monoid is a term from category theory. In Java the signature of Stream
+   * reduce is a monoid. In cyclops-react the Monoid class is used to
+   * encapsulate the identity value and the accumulating function. There is
+   * a Reducers class which has some useful Monoid instances for Integer
+   * addition / multiplication, String concatonation etc.
+   */
+  @Test
+  public void testCycle() {
+    List<Integer> cycleMonoid = ReactiveSeq.of(1, 2, 2)
+        .cycle(Reducers.toCountInt(), 4)
+        .toList();
+
+    logger.info("cycleMonoid : {}", cycleMonoid); // [3, 3, 3, 3]
+  }
+
+  /**
    * In addition to inhertiting flatMap from Stream, crossJoin, leftOuterJoin and
    * innerJoin from jOOλ, cyclops-react offers a number of additional flatMap methods
    * that accept a Function that returns a value that can be converted (implicitly)
@@ -649,6 +676,44 @@ public class StreamsTest {
     // .toList();
     //
     // logger.info("forEach3 : {}", forEach3);
+
+  }
+
+  @Test
+  public void testOnEmpty() {
+
+    List<Integer> onEmptySwitchFalse = ReactiveSeq.of(4, 5, 6)
+        .onEmptySwitch(() -> ReactiveSeq.of(1, 2, 3))
+        .toList();
+
+    logger.info("onEmptySwitchFalse : {}", onEmptySwitchFalse); // [4, 5, 6]
+
+    List<Integer> onEmptySwitchTrue = ReactiveSeq.fromIntStream(IntStream.empty())
+        .onEmptySwitch(() -> ReactiveSeq.of(1, 2, 3))
+        .toList();
+
+    logger.info("onEmptySwitchTrue : {}", onEmptySwitchTrue); // [1, 2, 3]
+
+  }
+
+  @Test
+  public void testSingle() {
+
+    // note that the ofType function also filters...
+
+    Integer singleFalse = ReactiveSeq.of(2, "a")
+        .ofType(Integer.class)
+        .singleOptional()
+        .orElse(1);
+
+    logger.info("singleFalse : {}", singleFalse); // 1
+
+    Integer singleTrue = ReactiveSeq.of("b")
+        .ofType(Integer.class)
+        .singleOptional()
+        .orElse(1);
+
+    logger.info("singleTrue : {}", singleTrue); // 1
 
   }
 
