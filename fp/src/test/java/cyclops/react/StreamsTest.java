@@ -655,6 +655,9 @@ public class StreamsTest {
 
   }
 
+  /**
+   * These are loops within loops.
+   */
   @Test
   public void testForComprehensions() {
 
@@ -667,6 +670,7 @@ public class StreamsTest {
     logger.info("forEach2 : {}", forEach2); // [11, 21, 31, 12, 22, 32, 13, 23, 33]
 
     // TODO forEach3 does not appear to compile yet...
+    // https://github.com/aol/cyclops-react/blob/master/src/test/java/com/aol/cyclops/streams/ForComprehensionsTest.java
 
     // ReactiveSeq.of(1, 2, 3)
     // .forEach3(
@@ -714,6 +718,36 @@ public class StreamsTest {
         .orElse(1);
 
     logger.info("singleTrue : {}", singleTrue); // 1
+
+  }
+
+  /**
+   * scanLeft performs a non-terminal foldLeft-like operation where the elements
+   * in the Stream returned are the intermediate cumulative results. Like reduce
+   * and fold the signature of scan matches a Monoid, cyclops-react supports
+   * specifying Monoid instances as a parameter (see the Reducers class).
+   * 
+   * scanLeft starts from the left and applies the supplied function to each
+   * value, storing the intermediate cumulative results in the new Stream.
+   * 
+   * scanRight can take advantage of cyclops-react Efficient Reversability for better performance.
+   */
+  @Test
+  public void testScan() {
+
+    List<Integer> scanLeft = ReactiveSeq.of("a", "ab", "abc")
+        .map(str -> str.length())
+        .scanLeft(0, (u, t) -> u + t)
+        .toList();
+
+    logger.info("scanLeft : {}", scanLeft); // [0, 1, 3, 6]
+
+    List<Integer> scanRight = ReactiveSeq.of("a", "ab", "abc")
+        .map(str -> str.length())
+        .scanRight(0, (u, t) -> u + t)
+        .toList();
+
+    logger.info("scanRight : {}", scanRight); // [0, 3, 5, 6]
 
   }
 
