@@ -3,6 +3,8 @@ package cyclops.react;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.Random;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +15,8 @@ import com.aol.cyclops.types.stream.HeadAndTail;
 public class TestUtils {
 
   private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+  private static final Random random = new Random();
 
   /** 
    * converts an integer to string, but might throw a RuntimeException...
@@ -83,6 +87,14 @@ public class TestUtils {
   }
 
   /**
+   * 
+   */
+  public static <T> T transform(T t) {
+    logger.info("transforming: {}", t.toString());
+    return t;
+  }
+
+  /**
    * Given an integer will return the same integer, but with a delay
    * to simulate a longer running process
    * @param n
@@ -118,6 +130,10 @@ public class TestUtils {
     return ReactiveSeq.of(ht.head())
         .appendStream(sieve(ht.tail()
             .filter(n -> n % ht.head() != 0)));
+  }
+
+  public static Supplier<Integer> supplyMessage() {
+    return () -> random.nextInt(10);
   }
 
 }
