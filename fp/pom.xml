@@ -19,7 +19,7 @@
     <immutables.version>2.1.19</immutables.version>
     <guava.version>19.0</guava.version>
     <javaslang.version>2.0.2</javaslang.version>
-    <cyclops-react.version>1.0.0-RC3</cyclops-react.version>
+    <cyclops-react.version>1.0.0-RC4</cyclops-react.version>
     <cyclops-javaslang.version>8.0.0</cyclops-javaslang.version>
     <!-- TEST -->
     <junit.version>4.12</junit.version>
