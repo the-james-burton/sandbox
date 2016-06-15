@@ -45,6 +45,7 @@
   
   <modules>
     <module>fp</module>
+    <module>reactor</module>
   </modules>
 
 </project>

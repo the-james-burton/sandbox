@@ -1,0 +1,103 @@
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>sandbox-reactor</artifactId>
+  <name>reactor</name>
+  <description>reactor</description>
+
+  <parent>
+    <groupId>org.jimsey.projects</groupId>
+    <artifactId>sandbox</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+
+  <properties>
+    <logback.version>1.1.5</logback.version>
+
+    <reactor-core.version>2.0.8.RELEASE</reactor-core.version>
+    <reactor-io.version>2.0.8.RELEASE</reactor-io.version>
+    <reactor-stream.version>2.0.8.RELEASE</reactor-stream.version>
+    <reactor-bus.version>2.0.8.RELEASE</reactor-bus.version>
+    <reactor-net.version>2.0.8.RELEASE</reactor-net.version>
+
+    <!-- TEST -->
+    <junit.version>4.12</junit.version>
+    <mockito.version>1.10.19</mockito.version>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.3</version>
+        <configuration>
+          <compilerVersion>1.8</compilerVersion>
+          <source>1.8</source>
+          <target>1.8</target>
+          <!-- Prevents an endPosTable exception during compilation -->
+          <useIncrementalCompilation>false</useIncrementalCompilation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+
+  <dependencies>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-net</artifactId>
+      <version>${reactor-net.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-core</artifactId>
+      <version>${reactor-core.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-bus</artifactId>
+      <version>${reactor-net.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-stream</artifactId>
+      <version>${reactor-core.version}</version>
+    </dependency>
+
+    <!-- <dependency> -->
+    <!-- <groupId>io.projectreactor</groupId> -->
+    <!-- <artifactId>reactor-io</artifactId> -->
+    <!-- <version>${reactor-io.version}</version> -->
+    <!-- </dependency> -->
+
+    <!-- ======================================================= -->
+    <!-- TEST -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+    </dependency>
+
+  </dependencies>
+
+</project>
