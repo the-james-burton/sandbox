@@ -18,6 +18,8 @@ import reactor.fn.BiConsumer;
 import reactor.fn.Consumer;
 import reactor.fn.Function;
 import reactor.fn.Supplier;
+import reactor.fn.tuple.Tuple;
+import reactor.fn.tuple.Tuple2;
 
 public class ReactorTest {
 
@@ -82,10 +84,10 @@ public class ReactorTest {
   }
 
   @Test
-  public void testfunctionalArtefacts() throws Exception {
+  public void testBiConsumer() throws Exception {
 
     // Now in Java 8 style for brievety
-    Function<Integer, String> transformation = integer -> "" + integer;
+    Function<Integer, String> transformation = integer -> "BiConsumer-" + integer;
 
     Supplier<Integer> supplier = () -> TestUtils.randomInteger();
 
@@ -103,4 +105,23 @@ public class ReactorTest {
 
   }
 
+  @Test
+  public void testTuple2() throws Exception {
+    Function<Integer, String> transformation = integer -> "Tuple2-" + integer;
+
+    Supplier<Integer> supplier = () -> TestUtils.randomInteger();
+
+    Consumer<Tuple2<Consumer<String>, String>> biConsumer = tuple -> {
+      for (int i = 0; i < 3; i++) {
+        // Correct typing, compiler happy
+        tuple.getT1().accept(tuple.getT2());
+      }
+    };
+
+    biConsumer.accept(
+        Tuple.of(
+            m -> logger.info("{}", m.toString()),
+            transformation.apply(supplier.get())));
+
+  }
 }
