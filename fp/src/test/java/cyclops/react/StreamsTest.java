@@ -427,7 +427,7 @@ public class StreamsTest {
 
   @Test
   public void testRetry() {
-    List<Integer> retry = ReactiveSeq.of(1, 2, 3, 4, 5, 6, 7, 8)
+    List<Integer> retry = ReactiveSeq.of(1, 2, 3)
         .retry(i -> TestUtils.sometimesThrowException(i))
         .toList();
 
@@ -447,7 +447,7 @@ public class StreamsTest {
   @Test(expected = RuntimeException.class)
   public void testRetryBackoff() {
     List<Integer> retry = ReactiveSeq.of(1, 2, 3, 4, 5, 6, 7, 8)
-        .retry(i -> TestUtils.alwaysThrowException(i), 5, 100, TimeUnit.MILLISECONDS)
+        .retry(i -> TestUtils.alwaysThrowException(i), 5, 20, TimeUnit.MILLISECONDS)
         .toList();
 
     logger.info("retry : {}", retry);
@@ -529,7 +529,7 @@ public class StreamsTest {
     final Executor exec = Executors.newFixedThreadPool(1);
 
     HotStream<Integer> hotStream = ReactiveSeq
-        .range(1, 100)
+        .range(1, 50)
         .peek(i -> TestUtils.alwaysSlowFunction(i))
         .peek(i -> logger.info("producer:{}", i.toString()))
         .primedHotStream(exec);

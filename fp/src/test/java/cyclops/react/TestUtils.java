@@ -25,7 +25,7 @@ public class TestUtils {
    * @return i.toString() or RuntimeException
    */
   public static <T extends Number> String toStringMayThrowError(T i) {
-    if (Math.random() < 0.5) {
+    if (Math.random() < 0.2) {
       throw new RuntimeException("I hate you");
     }
     return i.toString();
@@ -37,7 +37,7 @@ public class TestUtils {
    * @return i * 2 or RuntimeException
    */
   public static <T extends Number> T sometimesThrowException(T i) {
-    if (Math.random() < 0.5) {
+    if (Math.random() < 0.2) {
       logger.info("{}: simulated fail", i.toString());
       throw new RuntimeException("I hate you!");
     }
@@ -75,7 +75,7 @@ public class TestUtils {
    * @throws InterruptedException
    */
   public static <T> T sometimesSlowFunction(T n) {
-    if (Math.random() < 0.5) {
+    if (Math.random() < 0.2) {
       try {
         Thread.sleep(100);
       } catch (InterruptedException e) {
