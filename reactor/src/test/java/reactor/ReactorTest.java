@@ -14,6 +14,10 @@ import org.slf4j.LoggerFactory;
 
 import reactor.core.Dispatcher;
 import reactor.core.processor.RingBufferProcessor;
+import reactor.fn.BiConsumer;
+import reactor.fn.Consumer;
+import reactor.fn.Function;
+import reactor.fn.Supplier;
 
 public class ReactorTest {
 
@@ -75,6 +79,28 @@ public class ReactorTest {
 
     // Shutdown internal thread and call complete
     processor.onComplete();
+  }
+
+  @Test
+  public void testfunctionalArtefacts() throws Exception {
+
+    // Now in Java 8 style for brievety
+    Function<Integer, String> transformation = integer -> "" + integer;
+
+    Supplier<Integer> supplier = () -> TestUtils.randomInteger();
+
+    BiConsumer<Consumer<String>, String> biConsumer = (callback, value) -> {
+      for (int i = 0; i < 3; i++) {
+        // lazy evaluate the final logic to run
+        callback.accept(value);
+      }
+    };
+
+    // note how the execution flows from supplier to biconsumer
+    biConsumer.accept(
+        m -> logger.info("{}", m.toString()),
+        transformation.apply(supplier.get()));
+
   }
 
 }
