@@ -23,6 +23,7 @@
     <reactor-bus.version>2.0.8.RELEASE</reactor-bus.version>
     <reactor-net.version>2.0.8.RELEASE</reactor-net.version>
     <jackson.version>2.6.6</jackson.version>
+    <guava.version>19.0</guava.version>
 
     <!-- TEST -->
     <junit.version>4.12</junit.version>
@@ -89,6 +90,12 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
     </dependency>
 
 

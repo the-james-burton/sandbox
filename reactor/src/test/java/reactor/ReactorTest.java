@@ -2,6 +2,8 @@ package reactor;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,6 +17,8 @@ import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
+
 import reactor.core.Dispatcher;
 import reactor.core.processor.RingBufferProcessor;
 import reactor.core.processor.RingBufferWorkProcessor;
@@ -24,6 +28,8 @@ import reactor.fn.Function;
 import reactor.fn.Supplier;
 import reactor.fn.tuple.Tuple;
 import reactor.fn.tuple.Tuple2;
+import reactor.io.buffer.Buffer;
+import reactor.io.codec.json.JsonCodec;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
 
@@ -181,6 +187,39 @@ public class ReactorTest {
     pub.subscribe(pro);
 
     Thread.sleep(1000);
+
+  }
+
+  @Test
+  public void testCodec() throws Exception {
+
+    // given: 'A JSON codec'
+    JsonCodec<Map<String, Object>, Object> codec = new JsonCodec(Map.class);
+    CountDownLatch latch = new CountDownLatch(1);
+
+    // when: 'The decoder is passed some JSON'
+    final Map<String, Object> asyncDecoded = Maps.newHashMap();
+
+    Consumer<Map<String, Object>> codecConsumer = new Consumer<Map<String, Object>>() {
+      @Override
+      public void accept(Map<String, Object> t) {
+        logger.info("codecConsumer:{}", t);
+        asyncDecoded.putAll(t);
+        latch.countDown();
+      }
+    };
+
+    Function<Buffer, Map<String, Object>> asyncDecoder = codec.decoder(codecConsumer);
+    Function<Buffer, Map<String, Object>> syncDecoder = codec.decoder();
+
+    Map<String, Object> async = asyncDecoder.apply(Buffer.wrap("{\"a\": \"alpha\"}"));
+    Map<String, Object> sync = syncDecoder.apply(Buffer.wrap("{\"a\": \"beta\"}"));
+
+    // then: 'The decoded maps have the expected entries'
+    latch.await();
+
+    logger.info("sync:{}", sync);
+    logger.info("asyncDecoded:{}", asyncDecoded);
 
   }
 
