@@ -83,11 +83,13 @@ public class TestUtils {
     return n;
   }
 
-  /**
-   * 
-   */
   public static <T> T transform(T t) {
     logger.info("transforming: {}", t.toString());
+    return t;
+  }
+
+  public static <T> T show(T t) {
+    logger.info("show: {}", t.toString());
     return t;
   }
 

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -30,6 +31,7 @@ import reactor.fn.tuple.Tuple;
 import reactor.fn.tuple.Tuple2;
 import reactor.io.buffer.Buffer;
 import reactor.io.codec.json.JsonCodec;
+import reactor.rx.BiStreams;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
 
@@ -221,6 +223,38 @@ public class ReactorTest {
     logger.info("sync:{}", sync);
     logger.info("asyncDecoded:{}", asyncDecoded);
 
+  }
+
+  @Test
+  public void testStreams() throws Exception {
+    Environment.initialize();
+
+    // find the top 10 words used in a list of Strings
+    Streams.from(SandboxConstants.passage
+        .toLowerCase()
+        .replace(",", " ")
+        .replace(".", " ")
+        .replace(";", " ")
+        .replace("-", " ")
+        .split(" "))
+        .dispatchOn(Environment.sharedDispatcher())
+        .flatMap(sentence -> Streams
+            .from(sentence.split(" "))
+            .dispatchOn(Environment.cachedDispatcher())
+            .filter(word -> !word.trim().isEmpty())
+            .observe(word -> logger.info("word:{}", word)))
+        .map(word -> Tuple.of(word, 1))
+        .window(1, TimeUnit.SECONDS)
+        .flatMap(words -> BiStreams.reduceByKey(words, (prev, next) -> prev + next)
+            .sort((wordWithCountA, wordWithCountB) -> -wordWithCountA.t2.compareTo(wordWithCountB.t2))
+            .take(10)
+            .finallyDo(event -> logger.info("---- window complete! ----")))
+        .consume(
+            wordWithCount -> logger.info(wordWithCount.t1 + ": " + wordWithCount.t2),
+            error -> logger.error("", error));
+
+    // TODO how to wait for it to complete?
+    Thread.sleep(1000);
   }
 
 }
