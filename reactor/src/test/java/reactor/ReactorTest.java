@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import reactor.core.Dispatcher;
 import reactor.core.processor.RingBufferProcessor;
 import reactor.core.processor.RingBufferWorkProcessor;
+import reactor.core.reactivestreams.SubscriberFactory;
 import reactor.fn.BiConsumer;
 import reactor.fn.Consumer;
 import reactor.fn.Function;
@@ -267,6 +268,17 @@ public class ReactorTest {
   }
 
   @Test
+  public void testSubscriberFactory() throws Exception {
+    Stream<Integer> stream = Streams.just(10, 20, 30, 40);
+    Subscriber<Integer> subscriber = SubscriberFactory.unbounded(
+        (a, b) -> logger.info("dataConsumer:({},{})", a.toString(), b.toString()),
+        e -> logger.info("errorConsumer:{}", e.getMessage()),
+        c -> logger.info("completeConsumer:{}", c.toString()));
+
+    stream.subscribe(subscriber);
+  }
+
+  @Test
   public void testLifting() throws Exception {
     Stream<Integer> s1 = Streams.just(10, 20, 30, 40);
     // Stream<Integer> s1 = Streams.from(Arrays.asList(10, 20, 30, 40));
@@ -278,10 +290,21 @@ public class ReactorTest {
     s1.subscribe(s1sub); // subscriber1 will see the data A unaltered
     s2.subscribe(s2sub); // subscriber2 will see the data B after transformation from A.
 
-    // Note theat these two subscribers will materialize independant stream pipelines, a process we also call lifting
+    // Note theat these two subscribers will materialize independent stream pipelines, a process we also call lifting
     s1sub.request(4);
     s2sub.request(4);
 
+  }
+
+  @Test
+  public void testDispatchOn() throws Exception {
+    Environment.initialize();
+
+    Stream<String> st = Streams.just("Hello ", "World", "!");
+
+    st.dispatchOn(Environment.cachedDispatcher())
+        .map(String::toUpperCase)
+        .consume(s -> logger.info("{} greeting = {}", Thread.currentThread(), s));
   }
 
 }
