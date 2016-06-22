@@ -88,6 +88,12 @@ public class TestUtils {
     return t;
   }
 
+  public static String transformToString(Number n) {
+    String result = "!!".concat(n.toString());
+    logger.info("transformToString: {}", result);
+    return result;
+  }
+
   public static <T> T show(T t) {
     logger.info("show: {}", t.toString());
     return t;

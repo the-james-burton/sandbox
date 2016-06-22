@@ -242,7 +242,8 @@ public class ReactorTest {
             .from(sentence.split(" "))
             .dispatchOn(Environment.cachedDispatcher())
             .filter(word -> !word.trim().isEmpty())
-            .observe(word -> logger.info("word:{}", word)))
+    // .observe(word -> logger.info("word:{}", word))
+    )
         .map(word -> Tuple.of(word, 1))
         .window(1, TimeUnit.SECONDS)
         .flatMap(words -> BiStreams.reduceByKey(words, (prev, next) -> prev + next)
@@ -255,6 +256,32 @@ public class ReactorTest {
 
     // TODO how to wait for it to complete?
     Thread.sleep(1000);
+  }
+
+  @Test
+  public void testSubscriberRequest() throws Exception {
+    Stream<Integer> stream = Streams.just(10, 20, 30, 40);
+    LoggingSubscriber<Integer> subscriber = new LoggingSubscriber<Integer>("subscriber");
+    stream.subscribe(subscriber);
+    subscriber.request(4);
+  }
+
+  @Test
+  public void testLifting() throws Exception {
+    Stream<Integer> s1 = Streams.just(10, 20, 30, 40);
+    // Stream<Integer> s1 = Streams.from(Arrays.asList(10, 20, 30, 40));
+    Stream<String> s2 = s1.map(TestUtils::transformToString);
+
+    LoggingSubscriber<Integer> s1sub = new LoggingSubscriber<Integer>("s1sub");
+    LoggingSubscriber<String> s2sub = new LoggingSubscriber<String>("s2sub");
+
+    s1.subscribe(s1sub); // subscriber1 will see the data A unaltered
+    s2.subscribe(s2sub); // subscriber2 will see the data B after transformation from A.
+
+    // Note theat these two subscribers will materialize independant stream pipelines, a process we also call lifting
+    s1sub.request(4);
+    s2sub.request(4);
+
   }
 
 }
