@@ -2,6 +2,7 @@ package reactor;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +35,7 @@ import reactor.fn.tuple.Tuple2;
 import reactor.io.buffer.Buffer;
 import reactor.io.codec.json.JsonCodec;
 import reactor.rx.BiStreams;
+import reactor.rx.Promise;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
 import reactor.rx.action.Control;
@@ -266,7 +268,7 @@ public class ReactorTest {
     Subscriber<Integer> subscriber = SubscriberFactory.unbounded(
         (a, b) -> logger.info("dataConsumer:({},{})", a.toString(), b.toString()),
         e -> logger.info("errorConsumer:{}", e.getMessage()),
-        c -> logger.info("completeConsumer:{}", c.toString()));
+        na -> logger.info("completeConsumer:{}"));
 
     stream.subscribe(subscriber);
   }
@@ -339,5 +341,36 @@ public class ReactorTest {
     actionChain1.consume(m -> logger.info("chain one:{}", m)); // start chain1
     actionChain2.consume(m -> logger.info("chain two:{}", m)); // start chain2
 
+  }
+
+  @Test
+  public void testStreamFunctions() throws Exception {
+
+    Streams
+        .range(1, 10)
+        .map(n -> "#" + n)
+        .consume(logger::info);
+
+    Streams
+        .range(1, 5)
+        .flatMap(n -> Streams.range(1, n).subscribeOn(Environment.workDispatcher()))
+        .map(n -> "!" + n)
+        .consume(
+            logger::info,
+            e -> logger.info("exception:{}", e.getMessage()),
+            na -> logger.info("complete"));
+  }
+
+  @Test
+  public void testPromise() throws Exception {
+
+    // NOTE Blocking is considered an anti-pattern in Reactor!
+    Promise<List<Long>> result = Streams
+        .range(1, 10)
+        .subscribeOn(Environment.workDispatcher())
+        .toList();
+
+    logger.info("result:{}", result.await());
+    result.onSuccess(r -> logger.info("result:{}", r));
   }
 }
