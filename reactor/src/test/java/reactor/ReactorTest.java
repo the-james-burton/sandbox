@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,10 +50,16 @@ public class ReactorTest {
 
   @Before
   public void before() {
-    logger.info(name.getMethodName());
+    logger.info("start:{}", name.getMethodName());
     if (!Environment.alive()) {
       Environment.initialize();
     }
+  }
+
+  @After
+  public void after() throws InterruptedException {
+    Thread.sleep(100);
+    logger.info("end:{}", name.getMethodName());
   }
 
   @Test
@@ -100,8 +107,6 @@ public class ReactorTest {
         logger.info("onComplete");
       }
     });
-
-    Thread.sleep(100);
 
     // Shutdown internal thread and call complete
     // WARNING - this will kill the thread...
@@ -170,8 +175,6 @@ public class ReactorTest {
       pro.onNext(TestUtils.randomInteger() * 10);
     }
 
-    Thread.sleep(1000);
-
   }
 
   @Test
@@ -185,8 +188,6 @@ public class ReactorTest {
     sub.consume(s -> logger.info("thread:{}, data:{}", Thread.currentThread(), s));
 
     pub.subscribe(pro);
-
-    Thread.sleep(1000);
 
   }
 
@@ -249,8 +250,6 @@ public class ReactorTest {
             wordWithCount -> logger.info(wordWithCount.t1 + ": " + wordWithCount.t2),
             error -> logger.error("", error));
 
-    // TODO how to wait for it to complete?
-    Thread.sleep(1000);
   }
 
   @Test
@@ -305,11 +304,9 @@ public class ReactorTest {
     Broadcaster<String> sink = Broadcaster.create(Environment.get());
 
     sink.map(String::toUpperCase)
-        .consume(s -> System.out.printf("%s greeting = %s%n", Thread.currentThread(), s));
+        .consume(s -> logger.info("{} greeting = {}", Thread.currentThread(), s));
 
     sink.onNext("Hello World!");
-
-    Thread.sleep(100);
   }
 
   @Test
@@ -321,10 +318,26 @@ public class ReactorTest {
     Stream<String> actionChain1 = stream.map(String::toUpperCase).filter(w -> w.equals("C"));
     Stream<Long> actionChain2 = stream.dispatchOn(Environment.sharedDispatcher()).take(5).count();
 
-    actionChain1.consume(System.out::println); // start chain1
-    Control c = actionChain2.consume(System.out::println); // start chain2
+    actionChain1.consume(m -> logger.info("chain one:{}", m)); // start chain1
+    Control c = actionChain2.consume(m -> logger.info("chain two:{}", m)); // start chain2
 
-    Thread.sleep(100);
     // c.cancel(); // force this consumer to stop receiving data
+  }
+
+  @Test
+  public void testSharedStream() throws Exception {
+
+    Stream<String> stream = Streams.just("a", "b", "c", "d", "e", "f", "g", "h");
+
+    // prepare a shared pipeline
+    Stream<String> sharedStream = stream.observe(m -> logger.info("observe:{}", m)).broadcast();
+
+    // prepare two unique pipelines
+    Stream<String> actionChain1 = sharedStream.filter(w -> w.equals("c")).map(String::toUpperCase);
+    Stream<Long> actionChain2 = sharedStream.take(5).count();
+
+    actionChain1.consume(m -> logger.info("chain one:{}", m)); // start chain1
+    actionChain2.consume(m -> logger.info("chain two:{}", m)); // start chain2
+
   }
 }
