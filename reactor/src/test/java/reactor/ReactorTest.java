@@ -53,9 +53,7 @@ public class ReactorTest {
   @Before
   public void before() {
     logger.info("start:{}", name.getMethodName());
-    if (!Environment.alive()) {
-      Environment.initialize();
-    }
+    Environment.initializeIfEmpty();
   }
 
   @After
@@ -252,6 +250,9 @@ public class ReactorTest {
             wordWithCount -> logger.info(wordWithCount.t1 + ": " + wordWithCount.t2),
             error -> logger.error("", error));
 
+    // seems to be necessary...
+    Thread.sleep(100);
+
   }
 
   @Test
@@ -298,6 +299,16 @@ public class ReactorTest {
     st.dispatchOn(Environment.cachedDispatcher())
         .map(String::toUpperCase)
         .consume(s -> logger.info("{} greeting = {}", Thread.currentThread(), s));
+  }
+
+  @Test
+  public void testSubscribeOn() throws Exception {
+    Streams
+        .range(1, 10)
+        .process(RingBufferProcessor.create())
+        .subscribeOn(Environment.workDispatcher())
+        .capacity(1)
+        .consume(m -> logger.info(m.toString()));
   }
 
   @Test
@@ -372,5 +383,28 @@ public class ReactorTest {
 
     logger.info("result:{}", result.await());
     result.onSuccess(r -> logger.info("result:{}", r));
+  }
+
+  @Test
+  public void testBuffer() throws Exception {
+    long timeout = 100;
+    final int batchsize = 4;
+    CountDownLatch latch = new CountDownLatch(1);
+
+    final Broadcaster<Long> streamBatcher = Broadcaster.<Long> create();
+    streamBatcher
+        .buffer(batchsize, timeout, TimeUnit.MILLISECONDS)
+        .consume(i -> {
+          logger.info(i.toString());
+          latch.countDown();
+        });
+
+    Streams.range(1, 10).consume(i -> streamBatcher.onNext(i));
+    Thread.sleep(200);
+    Streams.range(1, 3).consume(i -> streamBatcher.onNext(i));
+    Thread.sleep(200);
+    Streams.range(11, 20).consume(i -> streamBatcher.onNext(i));
+
+    latch.await(2, TimeUnit.SECONDS);
   }
 }
