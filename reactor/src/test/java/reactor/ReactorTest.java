@@ -35,6 +35,8 @@ import reactor.io.codec.json.JsonCodec;
 import reactor.rx.BiStreams;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
+import reactor.rx.action.Control;
+import reactor.rx.broadcast.Broadcaster;
 
 public class ReactorTest {
 
@@ -48,12 +50,13 @@ public class ReactorTest {
   @Before
   public void before() {
     logger.info(name.getMethodName());
+    if (!Environment.alive()) {
+      Environment.initialize();
+    }
   }
 
   @Test
   public void testDispatcher() {
-    // Initialize context and get default dispatcher
-    Environment.initialize();
 
     // RingBufferDispatcher with 8192 slots by default
     Dispatcher dispatcher = Environment.sharedDispatcher();
@@ -78,7 +81,7 @@ public class ReactorTest {
     }
 
     // consume integer data
-    processor.subscribe(new Subscriber<Integer>() {
+    processor.subscribe(new LoggingSubscriber<Integer>("subscriber") {
 
       public void onSubscribe(Subscription s) {
         // unbounded subscriber
@@ -156,12 +159,6 @@ public class ReactorTest {
     // initial data in the stream...
     Stream<Integer> pub = Streams.from(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
 
-    // pro.onSubscribe(new LoggingSubscription());
-
-    // for (int i = 0; i < 3; i++) {
-    // pro.onNext(TestUtils.randomInteger());
-    // }
-
     sub.consume(s -> logger.info("thread:{}, data:{}", Thread.currentThread(), s));
     sub.consume(s -> logger.info("thread:{}, data:{}", Thread.currentThread(), s));
     sub.consume(s -> logger.info("thread:{}, data:{}", Thread.currentThread(), s));
@@ -228,8 +225,6 @@ public class ReactorTest {
 
   @Test
   public void testStreams() throws Exception {
-    Environment.initialize();
-
     // find the top 10 words used in a list of Strings
     Streams.from(SandboxConstants.passage
         .toLowerCase()
@@ -243,8 +238,7 @@ public class ReactorTest {
             .from(sentence.split(" "))
             .dispatchOn(Environment.cachedDispatcher())
             .filter(word -> !word.trim().isEmpty())
-    // .observe(word -> logger.info("word:{}", word))
-    )
+            .observe(word -> logger.info("word:{}", word)))
         .map(word -> Tuple.of(word, 1))
         .window(1, TimeUnit.SECONDS)
         .flatMap(words -> BiStreams.reduceByKey(words, (prev, next) -> prev + next)
@@ -298,8 +292,6 @@ public class ReactorTest {
 
   @Test
   public void testDispatchOn() throws Exception {
-    Environment.initialize();
-
     Stream<String> st = Streams.just("Hello ", "World", "!");
 
     st.dispatchOn(Environment.cachedDispatcher())
@@ -307,4 +299,32 @@ public class ReactorTest {
         .consume(s -> logger.info("{} greeting = {}", Thread.currentThread(), s));
   }
 
+  @Test
+  public void testBroadcaster() throws Exception {
+    // TODO might be gone in 2.5...
+    Broadcaster<String> sink = Broadcaster.create(Environment.get());
+
+    sink.map(String::toUpperCase)
+        .consume(s -> System.out.printf("%s greeting = %s%n", Thread.currentThread(), s));
+
+    sink.onNext("Hello World!");
+
+    Thread.sleep(100);
+  }
+
+  @Test
+  public void testTwoPipelines() throws Exception {
+
+    Stream<String> stream = Streams.just("a", "b", "c", "d", "e", "f", "g", "h");
+
+    // prepare two unique pipelines
+    Stream<String> actionChain1 = stream.map(String::toUpperCase).filter(w -> w.equals("C"));
+    Stream<Long> actionChain2 = stream.dispatchOn(Environment.sharedDispatcher()).take(5).count();
+
+    actionChain1.consume(System.out::println); // start chain1
+    Control c = actionChain2.consume(System.out::println); // start chain2
+
+    Thread.sleep(100);
+    // c.cancel(); // force this consumer to stop receiving data
+  }
 }
