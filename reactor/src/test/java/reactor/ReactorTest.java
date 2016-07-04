@@ -434,4 +434,50 @@ public class ReactorTest {
     assertThat(endLatch.getCount(), is(0l));
 
   }
+  
+  @Test
+  public void testCapacity() {
+    Stream<Long> st = Streams.range(0,  10);
+
+    // TODO capacity doesn't see to make a difference here...
+    st.dispatchOn(Environment.sharedDispatcher())
+      .capacity(3) 
+      .observe(m -> logger.info("observe:{}", m))
+      .consume(m -> logger.info("consume:{}", m));
+    
+    Streams
+    .range(1, 10)
+    .process(RingBufferProcessor.create()) 
+    .subscribeOn(Environment.workDispatcher()) 
+    .capacity(3)
+    .consume(m -> logger.info("consume:{}", m));
+  }
+  
+  @Test
+  public void testImplicitBuffer() throws Exception {
+    Streams.just(1,2,3,4,5)
+    .buffer(2) 
+    //onOverflowBuffer()
+    .capacity(4) 
+    .consume(m -> logger.info("consume:{}", m));
+
+
+  Streams.just(1,2,3,4,5)
+    .dispatchOn(Environment.cachedDispatcher()) 
+    //onOverflowBuffer()
+    .dispatchOn(Environment.cachedDispatcher()) 
+    .consume(m -> logger.info("consume:{}", m));
+  }
+  
+  @Test
+  public void testEvolve1() throws Exception {
+    logger.info("get:{}", TestUtils.get("James").await());
+    
+    TestUtils.allFriends("James")
+    .consume(m -> logger.info("allFriends:{}", m));
+
+    TestUtils.filteredFind("James")
+    .consume(m -> logger.info("filteredFind:{}", m));
+}
+  
 }

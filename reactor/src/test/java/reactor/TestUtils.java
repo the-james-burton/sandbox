@@ -4,10 +4,18 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Random;
-import java.util.function.Supplier;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
+
+import reactor.fn.Supplier;
+import reactor.rx.Promise;
+import reactor.rx.Promises;
+import reactor.rx.Stream;
+import reactor.rx.Streams;
 
 public class TestUtils {
 
@@ -124,4 +132,30 @@ public class TestUtils {
     return random.nextInt(10);
   }
 
+  public static Promise<String> get(final String name) {
+    
+    return Promises
+      .task(Environment.get(), () ->  name.toUpperCase())
+      // .timeout(3, TimeUnit.SECONDS)
+      .map(m -> "!!".concat(name));
+      //.subscribeOn(Environment.workDispatcher());
+  }
+
+  public static Stream<String> allFriends(final String user)  {
+    return Streams
+      .defer(() -> Streams.just(user, Strings.repeat(user, 2)))
+      .timeout(3, TimeUnit.SECONDS)
+      .map(m -> "##".concat(m))
+      .flatMap(Streams::just)
+      .dispatchOn(Environment.cachedDispatcher())
+      .subscribeOn(Environment.workDispatcher());
+  }
+
+  public static Stream<String> filteredFind(String name){
+      return get(name)
+        .stream()
+        .filter(m -> m.length() > 3)
+        .flatMap(TestUtils::allFriends);
+  }
+  
 }
