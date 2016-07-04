@@ -1,5 +1,8 @@
 package reactor;
 
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.List;
@@ -406,5 +409,29 @@ public class ReactorTest {
     Streams.range(11, 20).consume(i -> streamBatcher.onNext(i));
 
     latch.await(2, TimeUnit.SECONDS);
+  }
+
+  @Test
+  public void testWindow() throws Exception {
+    // create a list of 1000 numbers and prepare a Stream to read it
+    Stream<Long> sensorDataStream = Streams.range(0, 1000);
+
+    // wait for all windows of 100 to finish
+    CountDownLatch endLatch = new CountDownLatch(1000 / 100);
+
+    Control controls = sensorDataStream
+        .window(100)
+        .consume(window -> {
+          logger.info("new window");
+          window.reduce(Long.MAX_VALUE, (acc, next) -> Math.min(acc, next))
+                .finallyDo(o -> endLatch.countDown())
+                .consume(i -> logger.info("min:{}", i));
+        });
+
+    endLatch.await(10, TimeUnit.SECONDS);
+    logger.info(controls.debug().toString());
+
+    assertThat(endLatch.getCount(), is(0l));
+
   }
 }
