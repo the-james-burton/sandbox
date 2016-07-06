@@ -154,7 +154,7 @@ public class TestUtils {
   public static Stream<String> filteredFind(String name){
       return get(name)
         .stream()
-        .filter(m -> m.length() > 3)
+        .filter(m -> m.length() > 4)
         .flatMap(TestUtils::allFriends);
   }
   

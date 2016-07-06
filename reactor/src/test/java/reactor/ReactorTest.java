@@ -424,8 +424,8 @@ public class ReactorTest {
         .consume(window -> {
           logger.info("new window");
           window.reduce(Long.MAX_VALUE, (acc, next) -> Math.min(acc, next))
-                .finallyDo(o -> endLatch.countDown())
-                .consume(i -> logger.info("min:{}", i));
+              .finallyDo(o -> endLatch.countDown())
+              .consume(i -> logger.info("min:{}", i));
         });
 
     endLatch.await(10, TimeUnit.SECONDS);
@@ -434,50 +434,61 @@ public class ReactorTest {
     assertThat(endLatch.getCount(), is(0l));
 
   }
-  
+
   @Test
   public void testCapacity() {
-    Stream<Long> st = Streams.range(0,  10);
+    Stream<Long> st = Streams.range(0, 10);
 
     // TODO capacity doesn't see to make a difference here...
     st.dispatchOn(Environment.sharedDispatcher())
-      .capacity(3) 
-      .observe(m -> logger.info("observe:{}", m))
-      .consume(m -> logger.info("consume:{}", m));
-    
+        .capacity(3)
+        .observe(m -> logger.info("observe:{}", m))
+        .consume(m -> logger.info("consume:{}", m));
+
     Streams
-    .range(1, 10)
-    .process(RingBufferProcessor.create()) 
-    .subscribeOn(Environment.workDispatcher()) 
-    .capacity(3)
-    .consume(m -> logger.info("consume:{}", m));
+        .range(1, 10)
+        .process(RingBufferProcessor.create())
+        .subscribeOn(Environment.workDispatcher())
+        .capacity(3)
+        .consume(m -> logger.info("consume:{}", m));
   }
-  
+
   @Test
   public void testImplicitBuffer() throws Exception {
-    Streams.just(1,2,3,4,5)
-    .buffer(2) 
-    //onOverflowBuffer()
-    .capacity(4) 
-    .consume(m -> logger.info("consume:{}", m));
+    Streams.just(1, 2, 3, 4, 5)
+        .buffer(2)
+        // onOverflowBuffer()
+        .capacity(4)
+        .consume(m -> logger.info("consume:{}", m));
 
-
-  Streams.just(1,2,3,4,5)
-    .dispatchOn(Environment.cachedDispatcher()) 
-    //onOverflowBuffer()
-    .dispatchOn(Environment.cachedDispatcher()) 
-    .consume(m -> logger.info("consume:{}", m));
+    Streams.just(1, 2, 3, 4, 5)
+        .dispatchOn(Environment.cachedDispatcher())
+        // onOverflowBuffer()
+        .dispatchOn(Environment.cachedDispatcher())
+        .consume(m -> logger.info("consume:{}", m));
   }
-  
+
   @Test
   public void testEvolve1() throws Exception {
     logger.info("get:{}", TestUtils.get("James").await());
-    
+
     TestUtils.allFriends("James")
-    .consume(m -> logger.info("allFriends:{}", m));
+        .consume(m -> logger.info("allFriends:{}", m));
 
     TestUtils.filteredFind("James")
-    .consume(m -> logger.info("filteredFind:{}", m));
-}
-  
+        .consume(m -> logger.info("filteredFind:{}", m));
+
+    // TODO this seems to be non deterministic...
+    Streams.merge(
+        TestUtils.filteredFind("Rick"),
+        TestUtils.filteredFind("Morty"))
+        .buffer()
+        .retryWhen(errors -> errors
+            .zipWith(Streams.range(1, 3), t -> t.getT2())
+            .flatMap(tries -> Streams.timer(tries)))
+        .consume(m -> logger.info("parallelFind:{}", m));
+    
+    Thread.sleep(100);
+  }
+
 }
