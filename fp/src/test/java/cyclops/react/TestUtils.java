@@ -24,7 +24,8 @@ public class TestUtils {
    * @param i integer
    * @return i.toString() or RuntimeException
    */
-  public static <T extends Number> String toStringMayThrowError(T i) {
+  // public static <T extends Number> String toStringMayThrowError(T i) {
+  public static String toStringMayThrowError(Number i) {
     if (Math.random() < 0.2) {
       throw new RuntimeException("I hate you");
     }
@@ -74,7 +75,7 @@ public class TestUtils {
    * @return n
    * @throws InterruptedException
    */
-  public static <T> T sometimesSlowFunction(T n) {
+  public static Number sometimesSlowFunction(Number n) {
     if (Math.random() < 0.2) {
       try {
         Thread.sleep(100);

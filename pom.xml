@@ -47,6 +47,7 @@
     <module>fp</module>
     <module>reactor</module>
     <module>reactor3</module>
+    <module>mutation-testing</module>
   </modules>
 
 </project>

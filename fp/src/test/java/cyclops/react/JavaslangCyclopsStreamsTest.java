@@ -12,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aol.cyclops.control.ReactiveSeq;
+import com.aol.cyclops.control.StreamUtils;
 import com.aol.cyclops.javaslang.Javaslang;
-import com.aol.cyclops.util.stream.StreamUtils;
 
 public class JavaslangCyclopsStreamsTest {
 

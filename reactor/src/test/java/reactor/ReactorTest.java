@@ -44,6 +44,13 @@ import reactor.rx.Streams;
 import reactor.rx.action.Control;
 import reactor.rx.broadcast.Broadcaster;
 
+/**
+ * This uses an old version of projectreactor.io. However, some of the strategies
+ * may still apply to the new version.
+ *
+ * @author the-james-burton
+ */
+@Deprecated
 public class ReactorTest {
 
   private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -487,7 +494,7 @@ public class ReactorTest {
             .zipWith(Streams.range(1, 3), t -> t.getT2())
             .flatMap(tries -> Streams.timer(tries)))
         .consume(m -> logger.info("parallelFind:{}", m));
-    
+
     Thread.sleep(100);
   }
 
