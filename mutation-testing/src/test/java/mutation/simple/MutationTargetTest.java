@@ -1,8 +1,10 @@
-package mutation;
+package mutation.simple;
 
 import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
+
+import mutation.simple.MutationTarget;
 
 public class MutationTargetTest {
 
