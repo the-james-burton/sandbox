@@ -23,7 +23,8 @@
 package mutation.pojo;
 
 import static mutation.pojo.TickerTheoryTest.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -49,72 +50,88 @@ public class TickerTest {
   }
 
   @Test
-  public void testConstructor() {
+  public void testConstructorProperties() {
     // check that the constructor correctly sets all properties...
-    assertThat(tickAAA).hasFieldOrPropertyWithValue("ric", CharSeq.of(String.format("%s.%s", TICK1, AX.getExtension())));
-    assertThat(tickAAA).hasFieldOrPropertyWithValue("symbol", TICK1);
-    assertThat(tickAAA).hasFieldOrPropertyWithValue("exchange", AX);
+    assertThat(tickerAAA).hasFieldOrPropertyWithValue("ric", CharSeq.of(String.format("%s.%s", TICK1, AX.getExtension())));
+    assertThat(tickerAAA).hasFieldOrPropertyWithValue("symbol", TICK1);
+    assertThat(tickerAAA).hasFieldOrPropertyWithValue("exchange", AX);
+  }
+
+  @Test
+  public void testNonJsonConstructor() {
+    Ticker ticker = new Ticker(tickerAAA.getRic(), tickerAAA.getName());
+    assertThat(ticker.getExchange()).isEqualTo(tickerAAA.getExchange());
+    assertThat(ticker.getExchangeAsString()).isEqualTo(tickerAAA.getExchange().toString());
+    assertThat(ticker.getNameAsString()).isEqualTo(tickerAAA.getName().toString());
+    assertThat(ticker.getRicAsString()).isEqualTo(tickerAAA.getRic().toString());
+    assertThat(ticker.getSymbolAsString()).isEqualTo(tickerAAA.getSymbol().toString());
+
+    // assertj can't do CharSeq...
+    assertTrue(ticker.getName().equals(tickerAAA.getName()));
+    assertTrue(ticker.getRic().equals(tickerAAA.getRic()));
+    assertTrue(ticker.getSymbol().equals(tickerAAA.getSymbol()));
+
   }
 
   @Test
   public void testHashCode() {
     // check that the hash code is consistent across objects...
-    assertThat(tickAAA.hashCode()).isEqualTo(new Ticker(TICK1, AX, NAME1).hashCode());
-    assertThat(new Ticker(TICK1, AX, NAME1).hashCode()).isEqualTo(tickAAA.hashCode());
+    assertThat(tickerAAA.hashCode()).isEqualTo(new Ticker(TICK1, AX, NAME1).hashCode());
+    assertThat(new Ticker(TICK1, AX, NAME1).hashCode()).isEqualTo(tickerAAA.hashCode());
 
     // check that all fields are part of the hash code...
-    assertThat(tickAAA.hashCode()).isNotEqualTo(tickAAB.hashCode());
-    assertThat(tickAAA.hashCode()).isNotEqualTo(tickABA.hashCode());
-    assertThat(tickAAA.hashCode()).isNotEqualTo(tickBAA.hashCode());
+    assertThat(tickerAAA.hashCode()).isNotEqualTo(tickerAAB.hashCode());
+    assertThat(tickerAAA.hashCode()).isNotEqualTo(tickerABA.hashCode());
+    assertThat(tickerAAA.hashCode()).isNotEqualTo(tickerBAA.hashCode());
   }
 
   @Test
   public void testEquals() {
     // reflexive...
-    assertThat(tickAAA).isEqualTo(tickAAA);
+    assertThat(tickerAAA).isEqualTo(tickerAAA);
 
     // symmetric...
-    assertThat(tickAAA).isEqualTo(new Ticker(TICK1, AX, NAME1));
-    assertThat(new Ticker(TICK1, AX, NAME1)).isEqualTo(tickAAA);
+    assertThat(tickerAAA).isEqualTo(new Ticker(TICK1, AX, NAME1));
+    assertThat(new Ticker(TICK1, AX, NAME1)).isEqualTo(tickerAAA);
 
     // consistent (same checks again)...
-    assertThat(tickAAA).isEqualTo(new Ticker(TICK1, AX, NAME1));
-    assertThat(new Ticker(TICK1, AX, NAME1)).isEqualTo(tickAAA);
+    assertThat(tickerAAA).isEqualTo(new Ticker(TICK1, AX, NAME1));
+    assertThat(new Ticker(TICK1, AX, NAME1)).isEqualTo(tickerAAA);
 
     // transitive...
     Ticker ABC_AX2 = new Ticker(TICK1, AX, NAME1);
     Ticker ABC_AX3 = new Ticker(TICK1, AX, NAME1);
 
-    assertThat(tickAAA).isEqualTo(ABC_AX2);
+    assertThat(tickerAAA).isEqualTo(ABC_AX2);
     assertThat(ABC_AX2).isEqualTo(ABC_AX3);
-    assertThat(tickAAA).isEqualTo(ABC_AX3);
+    assertThat(tickerAAA).isEqualTo(ABC_AX3);
 
     // check not equal to null...
-    assertThat(tickAAA).isNotEqualTo(null);
+    assertThat(tickerAAA).isNotEqualTo(null);
 
     // check all properties are included in equals...
-    assertThat(tickAAA).isNotEqualTo(tickAAB);
-    assertThat(tickAAA).isNotEqualTo(tickABA);
-    assertThat(tickAAA).isNotEqualTo(tickBAA);
+    assertThat(tickerAAA).isNotEqualTo(tickerAAB);
+    assertThat(tickerAAA).isNotEqualTo(tickerABA);
+    assertThat(tickerAAA).isNotEqualTo(tickerBAA);
   }
 
   @Test
   public void testCompareTo() {
 
     // check that all fields participate in compareTo...
-    assertThat(tickAAA).isLessThan(tickAAB);
-    assertThat(tickAAA).isLessThan(tickABA);
-    assertThat(tickAAA).isLessThan(tickBAA);
+    assertThat(tickerAAA).isLessThan(tickerAAB);
+    assertThat(tickerAAA).isLessThan(tickerABA);
+    assertThat(tickerAAA).isLessThan(tickerBAA);
 
     // check that the reverse is also true...
-    assertThat(tickAAB).isGreaterThan(tickAAA);
-    assertThat(tickABA).isGreaterThan(tickAAA);
-    assertThat(tickBAA).isGreaterThan(tickAAA);
+    assertThat(tickerAAB).isGreaterThan(tickerAAA);
+    assertThat(tickerABA).isGreaterThan(tickerAAA);
+    assertThat(tickerBAA).isGreaterThan(tickerAAA);
   }
 
   @Test
   public void testJsonSerialise() throws IOException {
-    String expected = json.writeValueAsString(tickAAA);
+    String expected = json.writeValueAsString(tickerAAA);
     logger.info(expected);
     Ticker ticker = json.readValue(expected, Ticker.class);
     assertThat(ticker.toString()).isEqualTo(expected);

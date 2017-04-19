@@ -42,15 +42,15 @@ public class TickerTheoryTest extends ObjectTheories {
   public static final ExchangeEnum L = ExchangeEnum.LSE;
 
   @DataPoint
-  public static final Ticker tickAAA = Ticker.of(TICK1, AX, NAME1);
+  public static final Ticker tickerAAA = Ticker.of(TICK1, AX, NAME1);
 
   @DataPoint
-  public static final Ticker tickAAB = Ticker.of(TICK1, AX, NAME2);
+  public static final Ticker tickerAAB = Ticker.of(TICK1, AX, NAME2);
 
   @DataPoint
-  public static final Ticker tickABA = Ticker.of(TICK1, L, NAME1);
+  public static final Ticker tickerABA = Ticker.of(TICK1, L, NAME1);
 
   @DataPoint
-  public static final Ticker tickBAA = Ticker.of(TICK2, AX, NAME1);
+  public static final Ticker tickerBAA = Ticker.of(TICK2, AX, NAME1);
 
 }

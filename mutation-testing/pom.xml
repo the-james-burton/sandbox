@@ -15,6 +15,12 @@
   </parent>
 
   <properties>
+    <!-- plugins -->
+    <maven-scm-plugin.version>1.9.5</maven-scm-plugin.version>
+    <pitest-maven.version>1.2.0</pitest-maven.version>
+    <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
+
+    <!-- deps -->
     <logback.version>1.1.5</logback.version>
     <junit.version>4.12</junit.version>
     <mockito.version>1.10.19</mockito.version>
@@ -27,7 +33,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-scm-plugin</artifactId>
-        <version>1.9.5</version>
+        <version>${maven-scm-plugin.version}</version>
         <configuration>
           <connectionType>connection</connectionType>
         </configuration>
@@ -36,7 +42,29 @@
       <plugin>
         <groupId>org.pitest</groupId>
         <artifactId>pitest-maven</artifactId>
-        <version>1.2.0</version>
+        <version>${pitest-maven.version}</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco-maven-plugin.version}</version>
+
+        <executions>
+          <execution>
+            <id>default-prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>default-report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>
@@ -54,13 +82,13 @@
       <artifactId>javaslang</artifactId>
       <version>2.0.5</version>
     </dependency>
-    
+
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>2.8.7</version>
     </dependency>
-    
+
     <!-- TEST -->
     <dependency>
       <groupId>junit</groupId>

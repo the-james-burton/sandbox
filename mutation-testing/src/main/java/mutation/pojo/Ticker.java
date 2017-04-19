@@ -96,50 +96,9 @@ public class Ticker implements Comparable<Ticker> {
     this.ric = CharSeq.of(String.format("%s.%s", symbol, exchange.getExtension()));
   }
 
-  public Ticker(String ticker) {
-    this(CharSeq.of(ticker), CharSeq.empty());
-  }
-
-  public Ticker(CharSeq ticker) {
-    this(ticker, CharSeq.empty());
-  }
-
-  public Ticker(String ticker, String name) {
-    this(CharSeq.of(ticker), CharSeq.of(name));
-  }
-
   // ------------------------------------------
-  public static Ticker of(CharSeq ric) {
-    return new Ticker(ric);
-  }
-
-  public static Ticker of(String ric) {
-    return new Ticker(ric);
-  }
-
-  public static Ticker of(CharSeq ric, CharSeq name) {
-    return new Ticker(ric, name);
-  }
-
-  public static Ticker of(String ric, String name) {
-    return new Ticker(ric, name);
-  }
-
   public static Ticker of(CharSeq symbol, ExchangeEnum exchange, CharSeq name) {
     return new Ticker(symbol, exchange, name);
-  }
-
-  public static Ticker of(String symbol, ExchangeEnum exchange, String name) {
-    return new Ticker(CharSeq.of(symbol), exchange, CharSeq.of(name));
-  }
-
-  public static Ticker of(CharSeq symbol, CharSeq exchange, CharSeq name) {
-    return Ticker.of(symbol, ExchangeEnum.fromName(exchange)
-        .getOrElseThrow(() -> new RuntimeException(format("no ExchangeEnum available for name %s", exchange))), name);
-  }
-
-  public static Ticker of(String symbol, String exchange, String name) {
-    return Ticker.of(CharSeq.of(symbol), CharSeq.of(exchange), CharSeq.of(name));
   }
 
   // ----------------------------
@@ -181,11 +140,6 @@ public class Ticker implements Comparable<Ticker> {
   @JsonProperty("timestamp")
   public String getTimestamp() {
     return timestamp.format(DateTimeFormatter.ISO_DATE_TIME);
-  }
-
-  @JsonIgnore
-  public OffsetDateTime getTimestampAsObject() {
-    return timestamp;
   }
 
   @JsonProperty("ric")

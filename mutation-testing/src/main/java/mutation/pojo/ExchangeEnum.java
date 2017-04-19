@@ -38,11 +38,6 @@ public enum ExchangeEnum {
 
   private final CharSeq extension;
 
-  private ExchangeEnum(CharSeq name, CharSeq extension) {
-    this.name = name;
-    this.extension = extension;
-  }
-
   private ExchangeEnum(String exchange, String extension) {
     this.name = CharSeq.of(exchange);
     this.extension = CharSeq.of(extension);
@@ -50,14 +45,6 @@ public enum ExchangeEnum {
 
   public static Option<ExchangeEnum> fromExtension(CharSeq extension) {
     return Stream.of(values()).find(m -> m.getExtension().eq(extension));
-  }
-
-  public static Option<ExchangeEnum> fromName(CharSeq exchange) {
-    return Stream.of(values()).find(m -> m.getName().eq(exchange));
-  }
-
-  public CharSeq getName() {
-    return name;
   }
 
   public CharSeq getExtension() {
